@@ -1,6 +1,7 @@
 import os, sys
 import datetime
 from glob import glob
+import json
 
 import numpy as np
 
@@ -79,6 +80,13 @@ def get_slicetime_vars(infiles, TR=None):
                 TR = TR,
                 sliceorder = sliceorder)
 
+def save_json(inobj, outfile):
+    ''' save inobj to outfile using json'''
+    try:
+        json.dump(inobj, open(outfile,'w+'))
+    except:
+        raise IOError('Unable to save %s to json.'%inobj)
+
 
 def zip_files(files):
     if not hasattr(files, '__iter__'):
@@ -109,9 +117,6 @@ def unzip_file(infile):
             return None
         else:
             return base
-
-
-
 
 def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):
     """ uses spm to run realign_unwarp

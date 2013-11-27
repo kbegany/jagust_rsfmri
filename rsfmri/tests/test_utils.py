@@ -10,6 +10,15 @@ import nibabel
 from  .. import utils
 
 
+# create some test data
+def make_test_data():
+    tmpdir = tempfile.mkdtemp()
+    tmpnii = os.path.join(tmpdir, 'tmpfile.nii.gz')
+    nslices = 6
+    img = nibabel.Nifti1Image(np.empty((10,10,nslices)),np.eye(4))
+    img.to_filename(tmpnii)
+    return nslices, tmpnii
+
 def test_get_files():
     cwd = os.getcwd()
     myinit = os.path.join(cwd, '__init__.py')
@@ -34,11 +43,7 @@ def test_get_slicetime():
     npt.assert_equal(type(slicetime), type([]))
 
 def test_get_slicetime_vars():
-    tmpdir = tempfile.mkdtemp()
-    tmpnii = os.path.join(tmpdir, 'tmpfile.nii.gz')
-    nslices = 6
-    img = nibabel.Nifti1Image(np.empty((10,10,nslices)),np.eye(4))
-    img.to_filename(tmpnii)
+    nslices, tmpnii = make_test_data()
     npt.assert_raises(RuntimeError, utils.get_slicetime_vars, tmpnii)
     TR = 2.2
     stdict = utils.get_slicetime_vars(tmpnii, TR)
@@ -51,3 +56,6 @@ def test_get_slicetime_vars():
 def test_realign_unwarp():
     ru = utils.nipype_ext.RealignUnwarp()
     npt.assert_raises(ValueError, ru.run)
+
+def test_save_json():
+    pass
