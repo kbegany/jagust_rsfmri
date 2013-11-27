@@ -80,12 +80,22 @@ def get_slicetime_vars(infiles, TR=None):
                 TR = TR,
                 sliceorder = sliceorder)
 
+
 def save_json(inobj, outfile):
     ''' save inobj to outfile using json'''
     try:
         json.dump(inobj, open(outfile,'w+'))
     except:
         raise IOError('Unable to save %s to %s (json)'%(inobj, outfile))
+
+
+def load_json(infile):
+    ''' use json to load objects in json file'''
+    try:
+        result = json.load(open(infile))
+    except:
+        raise IOError('Unable to load %s' %infile)
+    return result
 
 
 def zip_files(files):

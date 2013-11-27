@@ -70,4 +70,18 @@ def test_save_json():
     os.unlink(tmpnii)
     os.unlink(tmpfile)
     
-    
+def test_load_json():
+    # make temp files
+    nslices, tmpnii = make_test_data()
+    TR = 2.2
+    stdict = utils.get_slicetime_vars(tmpnii, TR)
+    tmpdir, _ = os.path.split(tmpnii)
+    tmpfile = os.path.join(tmpdir, 'test_json.json')
+    utils.save_json(stdict, tmpfile)
+    # test roundtrip
+    tmpdict = utils.load_json(tmpfile)
+    npt.assert_equal(tmpdict == stdict, True)
+    npt.assert_equal(tmpdict['TR'], TR)
+    # not a valid file
+    npt.assert_raises(IOError, utils.load_json, 'notafile.txt')
+    npt.assert_raises(IOError, utils.load_json, open(tmpfile))
