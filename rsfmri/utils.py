@@ -173,6 +173,23 @@ def make_mean(niftilist, prefix='mean_'):
     return newfile
 
 
+## XXXTODO XXXX
+def aparc_mask():
+    """ takes coreg'd aparc and makes a mask based on label values"""
+    pass
+
+def extract_timeseries():
+    """ generic function to get timeseries from  files and a mask"""
+    
+    pass
+
+def bandpass():
+    """ filters for 4D images and timeseries in txt files"""
+    pass
+
+
+
+
 def spm_slicetime(infiles, matlab_cmd='matlab-spm8',stdict = None):
     """
     runs slice timing
