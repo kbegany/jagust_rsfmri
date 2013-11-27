@@ -85,7 +85,7 @@ def save_json(inobj, outfile):
     try:
         json.dump(inobj, open(outfile,'w+'))
     except:
-        raise IOError('Unable to save %s to json.'%inobj)
+        raise IOError('Unable to save %s to %s (json)'%(inobj, outfile))
 
 
 def zip_files(files):

@@ -58,4 +58,16 @@ def test_realign_unwarp():
     npt.assert_raises(ValueError, ru.run)
 
 def test_save_json():
-    pass
+    nslices, tmpnii = make_test_data()
+    stdict = utils.get_slicetime_vars(tmpnii, 2.2)
+    tmpdir, _ = os.path.split(tmpnii)
+    tmpfile = os.path.join(tmpdir, 'test_json.json')
+    utils.save_json(stdict, tmpfile)
+    npt.assert_equal(os.path.isfile(tmpfile), True)
+    npt.assert_raises(IOError, utils.save_json, stdict, None)
+    npt.assert_raises(IOError, utils.save_json, set([0,1,2]), tmpfile)
+    # cleanup
+    os.unlink(tmpnii)
+    os.unlink(tmpfile)
+    
+    
