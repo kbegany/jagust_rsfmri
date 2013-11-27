@@ -11,11 +11,12 @@ from  .. import utils
 
 
 # create some test data
-def make_test_data():
+def make_test_data(fill = 0):
     tmpdir = tempfile.mkdtemp()
     tmpnii = os.path.join(tmpdir, 'tmpfile.nii.gz')
     nslices = 6
-    img = nibabel.Nifti1Image(np.empty((10,10,nslices)),np.eye(4))
+    dat = np.zeros((10,10,nslices)) + fill
+    img = nibabel.Nifti1Image(dat, np.eye(4))
     img.to_filename(tmpnii)
     return nslices, tmpnii
 
@@ -56,6 +57,16 @@ def test_get_slicetime_vars():
 def test_realign_unwarp():
     ru = utils.nipype_ext.RealignUnwarp()
     npt.assert_raises(ValueError, ru.run)
+
+def test_make_mean():
+    _, one_file = make_test_data(fill = 1)
+    _, two_file = make_test_data(fill = 2)
+    mean_file = utils.make_mean([one_file, two_file])
+    dat = nibabel.load(mean_file).get_data()
+    npt.assert_equal(dat.mean(), 1.5)
+    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii')
+    os.unlink(one_file)
+    os.unlink(two_file)    
 
 def test_save_json():
     nslices, tmpnii = make_test_data()

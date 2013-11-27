@@ -6,6 +6,7 @@ import json
 import numpy as np
 
 import nibabel
+import nipype.interfaces.spm as spm
 from nipype.interfaces.base import CommandLine
 from nipype.utils import filemanip
 
@@ -152,3 +153,72 @@ def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):
     return ruout.outputs.mean_image, ruout.outputs.realigned_files,\
            ruout.outputs.realignment_parameters
 
+
+def make_mean(niftilist, prefix='mean_'):
+    """given a list of nifti files
+    generates a mean image"""
+    if not hasattr(niftilist, '__iter__'):
+        raise IOError('%s is not a list of valid nifti files, cannot make mean'%niftilist)
+    n_images = len(niftilist)
+    newfile = filemanip.fname_presuffix(niftilist[0], prefix=prefix)
+    affine = nibabel.load(niftilist[0]).get_affine()
+    shape =  nibabel.load(niftilist[0]).get_shape()
+    newdat = np.zeros(shape)
+    for item in niftilist:
+        newdat += nibabel.load(item).get_data().copy()
+    newdat = newdat / n_images
+    newdat = np.nan_to_num(newdat)
+    newimg = nibabel.Nifti1Image(newdat, affine)
+    newimg.to_filename(newfile)
+    return newfile
+
+
+def spm_slicetime(infiles, matlab_cmd='matlab-spm8',stdict = None):
+    """
+    runs slice timing
+    returns
+    timecorrected_files
+    """
+    startdir = os.getcwd()
+    pth, _ = os.path.split(infiles[0])
+    os.chdir(pth)    
+    if stdict == None:
+        stdict = get_slicetime_vars(infiles)
+    sliceorder = stdict['sliceorder']
+    st = spm.SliceTiming(matlab_cmd = matlab_cmd)
+    st.inputs.in_files = infiles
+    st.inputs.ref_slice = np.round(stdict['nslices'] / 2.0).astype(int)
+    st.inputs.slice_order = sliceorder
+    st.inputs.time_acquisition = stdict['TA']
+    st.inputs.time_repetition = stdict['TR']
+    st.inputs.num_slices = stdict['nslices']
+    out = st.run()
+    os.chdir(startdir)
+    if not out.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None
+    else:
+        return out.outputs.timecorrected_files
+
+
+def spm_coregister(moving, target, apply_to_files=None,
+                   matlab_cmd='matlab-spm8'):
+    """
+    runs coregistration for moving to target
+    """
+    startdir = os.getcwd()
+    pth, _ = os.path.split(moving)
+    os.chdir(pth)    
+    cr = spm.Coregister(matlab_cmd = matlab_cmd)
+    cr.inputs.source = moving
+    cr.inputs.target = target
+    if apply_to_files is not None:
+        cr.inputs.apply_to_files = apply_to_files
+    out = cr.run()
+    os.chdir(startdir)
+    if not out.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None, None
+    else:
+        return out.outputs.coregistered_source,\
+               out.outputs.coregistered_files
