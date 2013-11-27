@@ -85,3 +85,6 @@ def test_load_json():
     # not a valid file
     npt.assert_raises(IOError, utils.load_json, 'notafile.txt')
     npt.assert_raises(IOError, utils.load_json, open(tmpfile))
+    # cleanup
+    os.unlink(tmpnii)
+    os.unlink(tmpfile)
