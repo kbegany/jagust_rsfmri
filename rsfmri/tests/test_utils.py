@@ -52,21 +52,7 @@ def test_get_slicetime_vars():
     npt.assert_equal(stdict['TR'], TR)
     npt.assert_equal(stdict['nslices'], nslices)
     ## cleanup
-    os.unlink(tmpnii)
-
-def test_realign_unwarp():
-    ru = utils.nipype_ext.RealignUnwarp()
-    npt.assert_raises(ValueError, ru.run)
-
-def test_make_mean():
-    _, one_file = make_test_data(fill = 1)
-    _, two_file = make_test_data(fill = 2)
-    mean_file = utils.make_mean([one_file, two_file])
-    dat = nibabel.load(mean_file).get_data()
-    npt.assert_equal(dat.mean(), 1.5)
-    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii')
-    os.unlink(one_file)
-    os.unlink(two_file)    
+    os.unlink(tmpnii) 
 
 def test_save_json():
     nslices, tmpnii = make_test_data()
@@ -99,3 +85,66 @@ def test_load_json():
     # cleanup
     os.unlink(tmpnii)
     os.unlink(tmpfile)
+
+def test_realign_unwarp():
+    ru = utils.nipype_ext.RealignUnwarp()
+    npt.assert_raises(ValueError, ru.run)
+
+def test_make_mean():
+    _, one_file = make_test_data(fill = 1)
+    _, two_file = make_test_data(fill = 2)
+    mean_file = utils.make_mean([one_file, two_file])
+    dat = nibabel.load(mean_file).get_data()
+    npt.assert_equal(dat.mean(), 1.5)
+    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii')
+    os.unlink(one_file)
+    os.unlink(two_file)   
+
+def test_aparc_mask():
+    # make label dat
+    test_dat = np.zeros((10,10,10))
+    test_dat[:3,:3, :] = 3
+    test_dat[3:8,3:8,3:8] = 8
+    labels = (3,8)
+    # make nii
+    tmpdir = tempfile.mkdtemp()
+    tmpnii = os.path.join(tmpdir, 'tmpfile.nii.gz')
+    img = nibabel.Nifti1Image(test_dat, np.eye(4))
+    img.to_filename(tmpnii)
+    # test
+    tmpmask = os.path.join(tmpdir, 'tmpmask.nii.gz')
+    tmpmask = utils.aparc_mask(aparc=tmpnii, labels=labels, outfile=tmpmask)
+    mask_data = nibabel.load(tmpmask).get_data() # get data from new mask
+    npt.assert_equal(mask_data>0, test_dat>0)
+    # cleanup
+    os.unlink(tmpnii)
+    os.unlink(tmpmask)
+
+def test_extract_seed_ts():
+    # make nii
+    myrand = np.random.RandomState(42)
+    tmpdir = tempfile.mkdtemp()
+    tmp4d = os.path.join(tmpdir, 'tmpnii4d.nii.gz')
+    dat = myrand.random_sample((10,10,10,40))
+    img = nibabel.Nifti1Image(dat, np.eye(4))
+    img.to_filename(tmp4d)
+    # make seeds
+    tmpseed = os.path.join(tmpdir, 'tmpseed.nii.gz')
+    seed_dat = np.zeros((10,10,10))
+    seed_dat[:5,:5,:] = 1
+    seedimg = nibabel.Nifti1Image(seed_dat, np.eye(4))
+    seedimg.to_filename(tmpseed)
+    # test mean
+    meants = utils.extract_seed_ts(tmp4d, [tmpseed])
+    npt.assert_equal(isinstance(meants, dict), True)
+    keys = meants.keys()
+    npt.assert_almost_equal(meants[keys[0]][0], 0.49458008)
+    npt.assert_equal(meants[keys[0]].shape, (40,))
+    # test missing
+    dat[0,0,:] = 0
+    img = nibabel.Nifti1Image(dat, np.eye(4))
+    #img.to_filename(tmpnii)
+    # cleanup
+    #os.unlink(tmpnii)
+    os.unlink(tmpseed)
+    os.unlink(tmp4d)

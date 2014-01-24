@@ -8,6 +8,7 @@ import numpy as np
 import nibabel
 import nipype.interfaces.spm as spm
 from nipype.interfaces.base import CommandLine
+import nipype.interfaces.fsl as fsl
 from nipype.utils import filemanip
 
 ## deal with relative import for now
@@ -42,7 +43,8 @@ def get_slicetime(nslices):
 
     Returns:
     sliceorder: list
-        list containing the order of slice acquisition used for slicetime correction
+        list containing the order of slice acquisition used for slicetime 
+        correction
 
     """
     if np.mod(nslices,2) == 0:
@@ -112,6 +114,7 @@ def zip_files(files):
         if not cout.runtime.returncode == 0:
             logging.error('Failed to zip %s'%(f))
 
+
 def unzip_file(infile):
     """ looks for gz  at end of file,
     unzips and returns unzipped filename"""
@@ -128,6 +131,7 @@ def unzip_file(infile):
             return None
         else:
             return base
+
 
 def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):
     """ uses spm to run realign_unwarp
@@ -158,7 +162,8 @@ def make_mean(niftilist, prefix='mean_'):
     """given a list of nifti files
     generates a mean image"""
     if not hasattr(niftilist, '__iter__'):
-        raise IOError('%s is not a list of valid nifti files, cannot make mean'%niftilist)
+        raise IOError('%s is not a list of valid nifti files,'\
+            ' cannot make mean'%niftilist)
     n_images = len(niftilist)
     newfile = filemanip.fname_presuffix(niftilist[0], prefix=prefix)
     affine = nibabel.load(niftilist[0]).get_affine()
@@ -173,21 +178,79 @@ def make_mean(niftilist, prefix='mean_'):
     return newfile
 
 
-## XXXTODO XXXX
-def aparc_mask():
-    """ takes coreg'd aparc and makes a mask based on label values"""
+def aparc_mask(aparc, labels, outfile = 'bin_labelmask.nii.gz'):
+    """ takes coreg'd aparc and makes a mask based on label values
+    Parameters
+    ==========
+    aparc : filename
+        file containing label image (ints)
+    labels : tuple
+        tuple of label values (ints)
+    """
+    pth, _ = os.path.split(outfile)
+    img = nibabel.load(aparc)
+    mask = np.zeros(img.get_shape())
+    label_dat = img.get_data()
+    for label in labels:
+        mask[label_dat == label] = 1
+    masked_img = nibabel.Nifti1Image(mask, img.get_affine())
+    outf = os.path.join(pth, outfile)
+    masked_img.to_filename(outf)
+    return outf
+
+def get_seedname(seedfile):
+    _, nme, _ = filemanip.split_filename(seedfile)
+    return nme
+
+
+def extract_seed_ts(data, seeds):
+    """ check shape match of data and seed if same assume registration
+    extract mean of data in seed > 0"""
+    data_dat = nibabel.load(data).get_data()
+    meants = {}
+    for seed in seeds:
+        seednme = get_seedname(seed)
+        seed_dat = nibabel.load(seed).get_data().squeeze()
+        assert seed_dat.shape == data_dat.shape[:3]
+        seed_dat[data_dat[:,:,:,0].squeeze() <=0] = 0
+        tmp = data_dat[seed_dat > 0,:]
+        meants.update({seednme:tmp.mean(0)})
+    return meants 
+
+
+def bandpass_data():
+    """ filters for 4D images and timeseries in txt files
+    Uses afni 3dBandpass
+    """
     pass
 
-def extract_timeseries():
-    """ generic function to get timeseries from  files and a mask"""
-    
+
+def bandpass_regressor():
+    """ filters motion params and timeseries from csf and white matter 
+    (also global signal when relevant)
+    Use afni  1dBandpass, motion values in a 1d file"""
     pass
 
-def bandpass():
-    """ filters for 4D images and timeseries in txt files"""
-    pass
 
-
+def fsl_bandpass(infile, tr, lowf=0.0083, highf=0.15):
+    """ use fslmaths to bandpass filter a 4d file"""
+    startdir = os.getcwd()
+    pth, nme = os.path.split(infile)
+    os.chdir(pth)
+    low_freq = 1  / lowf / 2 / tr
+    high_freq = 1 / highf / 2 / tr
+    im = fsl.ImageMaths()
+    im.inputs.in_file = infile
+    op_str = ' '.join(['-bptf',str(low_freq), str(high_freq)])
+    im.inputs.op_string = op_str
+    im.inputs.suffix = 'bpfilter_l%2.2f_h%2.2f'%(low_freq, high_freq)
+    out = im.run()
+    os.chdir(startdir)
+    if not out.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None
+    else:
+        return out.outputs.out_file
 
 
 def spm_slicetime(infiles, matlab_cmd='matlab-spm8',stdict = None):
