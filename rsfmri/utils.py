@@ -5,6 +5,11 @@ import json
 
 import numpy as np
 
+
+from nitime.timeseries import TimeSeries
+# Import the analysis objects:
+from nitime.analysis import SpectralAnalyzer, FilterAnalyzer
+
 import nibabel
 import nipype.interfaces.spm as spm
 from nipype.interfaces.base import CommandLine
@@ -223,6 +228,15 @@ def bandpass_data():
     Uses afni 3dBandpass
     """
     pass
+
+def nitime_bandpass(data, tr, ub=0.15, lb=0.0083):
+    """ use nittime to bandpass filter regressors"""
+    ts = TimeSeries(data, sampling_interval=tr)
+    filtered_ts = FilterAnalyzer(ts, ub=ub, lb=lb)
+    return filtered_ts.data
+
+def write_filtered(data, outfile):
+    data.to_file(outfile)
 
 
 def bandpass_regressor():
