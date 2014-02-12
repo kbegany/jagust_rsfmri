@@ -316,3 +316,30 @@ def spm_coregister(moving, target, apply_to_files=None,
     else:
         return out.outputs.coregistered_source,\
                out.outputs.coregistered_files
+
+
+def update_fsf(fsf, fsf_dict):
+    original = open(fsf).read()
+    tmp1 = original.replace('nuisance_dir',
+                            fsf_dict['nuisance_dir'])
+    tmp2 = tmp1.replace('nuisance_model_outputdir',
+                        fsf_dict['nuisance_outdir'])
+    tmp3 = tmp2.replace('nuisance_model_input_data',
+                        fsf_dict['input_data'])
+    tmp4 = tmp3.replace('nuisance_model_TR',
+                        fsf_dict['TR'])
+    tmp5 = tmp4.replace('nuisance_model_numTRs',
+                        fsf_dict['nTR'])
+    return tmp5
+
+def run_film(data, design, results_dir):
+    minval = nibabel.load(data).get_data().min()
+    film = fsl.FILMGLS()
+    film.inputs.in_file = data
+    film.inputs.design_file = design
+    film.inputs.threshold = minval
+    film.inputs.results_dir = results_dir
+    film.inputs.smooth_autocorr = True
+    film.inputs.mask_size = 5
+    res = film.run()
+    return res
