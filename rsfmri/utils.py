@@ -356,7 +356,20 @@ def write_fsf(fsf_string, outfile):
     to outfile"""
     with open(outfile, 'w+') as fid:
         fid.write(fsf_string)
-    
+
+   
+def run_feat_model(fsf_file):
+    """ runs FSL's feat_model which uses the fsf file to generate 
+    files necessary to run film_gls to fit design matrix to timeseries"""
+    clean_fsf = fsf_file.strip('.fsf')
+    cmd = 'feat_model %s'%(clean_fsf)
+    out = pp.CommandLine(cmd).run()
+    if not out.runtime.returncode == 0:
+        return None, out.runtime.stderr
+            
+    mat = fsf_file.replace('.fsf', '.mat')
+    return mat, cmd
+
 
 def run_film(data, design, results_dir):
     minval = nibabel.load(data).get_data().min()
