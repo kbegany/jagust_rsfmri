@@ -319,6 +319,25 @@ def spm_coregister(moving, target, apply_to_files=None,
 
 
 def update_fsf(fsf, fsf_dict):
+    """ update fsf with subject specific data
+    Parameters
+    ----------
+    fsf : filename
+        filename of default fsf file with default parameters
+        to use for your model 
+    fsf_dict : dict
+        dictionary holding data with the following keys:
+        nuisance_dir
+        nuisance_outdir
+        input_data
+        TR
+        nTR
+    
+    Returns
+    -------
+    tmp5 : string 
+        string to write to new fsf file
+    """
     original = open(fsf).read()
     tmp1 = original.replace('nuisance_dir',
                             fsf_dict['nuisance_dir'])
@@ -331,6 +350,13 @@ def update_fsf(fsf, fsf_dict):
     tmp5 = tmp4.replace('nuisance_model_numTRs',
                         fsf_dict['nTR'])
     return tmp5
+
+def write_fsf(fsf_string, outfile):
+    """ writes an updated fsf string (see update_fsf)
+    to outfile"""
+    with open(outfile, 'w+') as fid:
+        fid.write(fsf_string)
+    
 
 def run_film(data, design, results_dir):
     minval = nibabel.load(data).get_data().min()
