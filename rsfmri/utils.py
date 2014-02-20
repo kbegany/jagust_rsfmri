@@ -38,6 +38,51 @@ def make_datestr():
     now = datetime.datetime.now()
     return now.strftime('%Y_%m_%d_%H_%S')
 
+def fsl_make4d(infiles):
+    """a list of files is passed, a 4D volume will be created
+    in the same directory as the original files"""
+    if not hasattr(infiles, '__iter__'):
+        raise IOError('expected list,not %s'%(infiles))
+    startdir = os.getcwd()
+    pth, nme = os.path.split(infiles[0])
+    os.chdir(pth)
+    merge = fsl.Merge()
+    merge.inputs.in_files = infiles
+    merge.inputs.dimension = 't'
+    out = merge.run()
+    os.chdir(startdir)
+    if not out.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None
+    else:
+        return out.outputs.merged_file
+
+def fsl_split4d(infile, outdir, sid):
+    """ uses fsl to split 4d file into parts
+    based on sid, puts resulting files in outdir
+    """
+    startdir = os.getcwd()
+    pth, nme = os.path.split(infile)
+    os.chdir(outdir)
+    im = fsl.Split()
+    im.inputs.in_file = infile
+    im.inputs.dimension = 't'
+    im.inputs.out_base_name = sid
+    im.inputs.output_type = 'NIFTI'
+    out = im.run()
+    os.chdir(startdir)
+    if not out.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None
+    else:
+        # fsl split may include input file as an output
+        ## bad globbing...
+        # remove it here
+        outfiles = out.outputs.out_files
+        outfiles = [x for x in outfiles if not x == im.inputs.in_file]
+        return outfiles
+    
+
 
 def get_slicetime(nslices):
     """
