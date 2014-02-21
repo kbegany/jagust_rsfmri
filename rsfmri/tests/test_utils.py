@@ -26,6 +26,17 @@ def test_get_files():
     res, nfiles = utils.get_files(cwd, '*')
     npt.assert_equal(myinit in res, True)
 
+
+def test_make_dir():
+    tmpdir = tempfile.mkdtemp()
+    dirnme = 'Created_directory'
+    newdir, exists = utils.make_dir(tmpdir, dirnme)
+    npt.assert_equal(newdir, os.path.join(tmpdir, dirnme))
+    npt.assert_equal(exists, False)
+    newdir, exists = utils.make_dir(tmpdir, dirnme)
+    npt.assert_equal(exists, True)
+
+
 def test_make_datestr():
     new_str = utils.make_datestr()
     parts = new_str.split('_')
