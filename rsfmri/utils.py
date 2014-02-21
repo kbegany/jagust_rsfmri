@@ -38,6 +38,35 @@ def make_datestr():
     now = datetime.datetime.now()
     return now.strftime('%Y_%m_%d_%H_%S')
 
+
+
+def make_dir(base_dir, dirname='fdg_nifti'):
+    """ makes a new directory if it doesnt alread exist
+    returns full path
+    
+    Parameters
+    ----------
+    base_dir : str
+    the root directory
+    dirname  : str (default pib_nifti)
+    new directory name
+    
+    Returns
+    -------
+    newdir  : str
+    full path of new directory
+    """
+    newdir = os.path.join(base_dir,dirname)
+    if not os.path.isdir(base_dir):
+        raise IOError('ERROR: base dir %s DOES NOT EXIST'%(base_dir))
+    directory_exists = os.path.isdir(newdir)
+    if not directory_exists:
+        os.mkdir(newdir)
+    return newdir, directory_exists
+
+    
+    
+
 def fsl_make4d(infiles):
     """a list of files is passed, a 4D volume will be created
     in the same directory as the original files"""
