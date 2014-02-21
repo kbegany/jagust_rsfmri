@@ -24,7 +24,7 @@ def function_logger(indir, console = False):
     logging.basicConfig(filename=logfile,level=logging.DEBUG)
     
 
-    logger = logging.getLogger('antsregister')
+    logger = logging.getLogger('rsfmri.register')
     logger.setLevel(logging.DEBUG)
 
     fileh = logging.FileHandler(logfile)
@@ -137,7 +137,7 @@ def affine_register_cc(target, moving):
     fullcmd = ' '.join([_basecmd, dim, '-m', similarity, '-i', '0', 
         '-o', outfile_prefix])
     logging.info(fullcmd)
-    res = CommandLine(fullcmd).run()
+    res = CommandLine(fullcmd, ignore_exception=True).run()
     os.chdir(scriptdir)
 
     if  res.runtime.returncode == 0 and not 'Exception' in res.runtime.stderr:
