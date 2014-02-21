@@ -7,7 +7,6 @@ import numpy as np
 
 
 from nitime.timeseries import TimeSeries
-# Import the analysis objects:
 from nitime.analysis import SpectralAnalyzer, FilterAnalyzer
 
 import nibabel
@@ -64,8 +63,8 @@ def make_dir(base_dir, dirname='fdg_nifti'):
         os.mkdir(newdir)
     return newdir, directory_exists
 
-    
-    
+
+
 
 def fsl_make4d(infiles):
     """a list of files is passed, a 4D volume will be created
