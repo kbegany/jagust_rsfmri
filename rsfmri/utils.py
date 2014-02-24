@@ -39,7 +39,7 @@ def make_datestr():
 
 
 
-def make_dir(base_dir, dirname='fdg_nifti'):
+def make_dir(base_dir, dirname='newdir'):
     """ makes a new directory if it doesnt alread exist
     returns full path
     
@@ -145,7 +145,7 @@ def get_slicetime_vars(infiles, TR=None):
         TR: repetition Time
         sliceorder : array with slice order to run slicetime correction
     """
-    if hasattr('__iter__', infiles):
+    if hasattr(infiles, '__iter__'):
         img = nibabel.load(infiles[0])
     else:
         img = nibabel.load(infiles)
@@ -209,6 +209,24 @@ def unzip_file(infile):
             return None
         else:
             return base
+
+
+
+def spm_realign(infiles, matlab='matlab-spm8'):
+    """ Uses SPM to realign files"""
+    startdir = os.getcwd()
+    pth, _ = os.path.split(infiles[0])
+    os.chdir(pth) 
+    rlgn = spm.Realign(matlab_cmd = matlab)
+    rlgn.inputs.in_files = infiles
+    rlgn.inputs.register_to_mean = True
+    out = rlgn.run()
+    os.chdir(startdir)
+    if not out.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None, None, None
+    return out.outputs.mean_image, out.outputs.realigned_files,\
+           out.outputs.realignment_parameters        
 
 
 def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):

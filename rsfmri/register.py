@@ -14,6 +14,7 @@ from nipype.utils.filemanip import (split_filename, fname_presuffix)
 
 
 ANTSPATH='/home/jagust/fmri-pstask/pilot/ANTS/ANTs-1.9.v4-Linux/bin'
+module_logger = logging.getLogger('rsfmri.register')
 
 def timestr():
     return datetime.datetime.strftime(datetime.datetime.now(), 

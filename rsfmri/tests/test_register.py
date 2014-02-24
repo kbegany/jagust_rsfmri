@@ -34,7 +34,7 @@ class RegistrationTest(unittest.TestCase):
     def test_function_logger(self):
         tmpdir, _ = os.path.split(self.files[0])
         register.function_logger(tmpdir)
-        logger = logging.getLogger('antsregister.test')
+        logger = logging.getLogger('rsfmri.register.test')
         message = 'testing function logger'
         logger.info(message)
         logf = glob(os.path.join(tmpdir, '*.log'))[0]
