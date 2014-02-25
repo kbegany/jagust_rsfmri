@@ -5,11 +5,12 @@ from glob import glob
 
 from rsfmri import utils
 from rsfmri import register as reg
+from rsfmri import transform
 
 
 
 def split(rawdir, destdir, sid):
-    files, nfiles = utils.get_files(rawdir, 'B*anat.nii*')
+    files, nfiles = utils.get_files(rawdir, 'B*func4d.nii*')
     if not nfiles == 1:
         raise IOError('raw functional not found unexpected {0}'.format(files))
     rawfunc = files[0]
@@ -34,6 +35,8 @@ def make_realign_splitfiles(rawdir, destdir, sid):
         if transformed is None:
             raise IOError('{0}: apply xfm failed'.format(moving))
         aligned.append(transformed)
+    utils.zip_files(funcs)
+    utils.zip_files(aligned[1:])
     movement_array = transform.collate_affines(xfms)
     return aligned, movement_array
 
@@ -55,9 +58,8 @@ def process_subject(subdir):
     aligned, move_arr = make_realign_splitfiles(rawdir, 
                                                 workdir, 
                                                 sid) 
-    
-    p:w
-    t_write_movement(workdir, sid, move_arr
+ 
+    plot_write_movement(workdir, sid, move_arr)
     print '{0} : finished'.format(sid)
 
 if __name__ == '__main__':
@@ -67,12 +69,12 @@ if __name__ == '__main__':
     except:
         raise IOError("""no data directory defined:
             USAGE:
-            python realignst_spm.py /path/to/data TR
+            python realignst_spm.py /path/to/data/subj
             """)
 
 
 
-    process_subject(datadir, 'B13*')
+    process_subject(datadir)
     
 
     

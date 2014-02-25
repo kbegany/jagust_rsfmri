@@ -21,9 +21,9 @@ def make_test_data(fill = 0):
     return nslices, tmpnii
 
 def test_get_files():
-    cwd = os.getcwd()
-    myinit = os.path.join(cwd, '__init__.py')
-    res, nfiles = utils.get_files(cwd, '*')
+    pth, _ = os.path.split(__file__)
+    myinit = os.path.join(pth, '__init__.py')
+    res, nfiles = utils.get_files(pth, '*')
     npt.assert_equal(myinit in res, True)
 
 

@@ -39,6 +39,10 @@ def make_realignst_splitfiles(rawdir, destdir, sid, TR, logger):
     if st_realigned is None:
         logger.error('{0}: slice timing failed'.format(realigned))
         return None, None
+    ## zip files
+    utils.zip_files(funcs)
+    utils.zip_files(realigned[1:]) # first is original func
+    utils.zip_files(st_realigned)
     movement_array = np.loadtxt(params)
     return st_realigned, movement_array
 
@@ -67,7 +71,7 @@ def process_subject(subdir, tr, logger):
         return None
     ## spm only has 6 params, add empty 7th for plotting
     move_arr = np.hstack((move_arr, 
-                          np.zeros(move_arr.shape[0])))
+                          np.zeros((move_arr.shape[0],1))))
     plot_write_movement(workdir, sid, move_arr, logger)
     logger.info('{0} : finished'.format(sid))
 
