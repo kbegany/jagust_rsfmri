@@ -66,7 +66,7 @@ def make_dir(base_dir, dirname='newdir'):
 
 
 
-def fsl_make4d(infiles):
+def fsl_make4d(infiles, newfile):
     """a list of files is passed, a 4D volume will be created
     in the same directory as the original files"""
     if not hasattr(infiles, '__iter__'):
@@ -77,6 +77,7 @@ def fsl_make4d(infiles):
     merge = fsl.Merge()
     merge.inputs.in_files = infiles
     merge.inputs.dimension = 't'
+    merge.inputs.merged_file = newfile
     out = merge.run()
     os.chdir(startdir)
     if not out.runtime.returncode == 0:
@@ -254,14 +255,13 @@ def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):
            ruout.outputs.realignment_parameters
 
 
-def make_mean(niftilist, prefix='mean_'):
+def make_mean(niftilist, outfile):
     """given a list of nifti files
     generates a mean image"""
     if not hasattr(niftilist, '__iter__'):
         raise IOError('%s is not a list of valid nifti files,'\
             ' cannot make mean'%niftilist)
     n_images = len(niftilist)
-    newfile = filemanip.fname_presuffix(niftilist[0], prefix=prefix)
     affine = nibabel.load(niftilist[0]).get_affine()
     shape =  nibabel.load(niftilist[0]).get_shape()
     newdat = np.zeros(shape)
@@ -270,8 +270,8 @@ def make_mean(niftilist, prefix='mean_'):
     newdat = newdat / n_images
     newdat = np.nan_to_num(newdat)
     newimg = nibabel.Nifti1Image(newdat, affine)
-    newimg.to_filename(newfile)
-    return newfile
+    newimg.to_filename(outfile)
+    return outfile
 
 
 def aparc_mask(aparc, labels, outfile = 'bin_labelmask.nii.gz'):
