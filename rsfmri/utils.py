@@ -14,6 +14,7 @@ import nipype.interfaces.spm as spm
 from nipype.interfaces.base import CommandLine
 import nipype.interfaces.fsl as fsl
 from nipype.utils import filemanip
+import nipype.interfaces.afni as afni
 
 ## deal with relative import for now
 cwd = os.getcwd()
@@ -211,6 +212,22 @@ def unzip_file(infile):
         else:
             return base
 
+
+
+def afni_despike(in4d):
+    """ uses afni despike to despike a 4D dataset 
+    saves as ds_<filename>"""
+    dspike = afni.Despike()
+    dspike.inputs.in_file = in4d
+    dspike.inputs.outputtype = 'NIFTI_GZ'
+    dspike.inputs.ignore_exception = True 
+    outfile = filemanip.fname_presuffix(in4d, 'ds')
+    dspike.inputs.out_file = outfile
+    res = dspike.run()
+    if not res.runtime.returncode == 0:
+        print out.runtime.stderr
+        return None
+    return res.outputs.out_file
 
 
 def spm_realign(infiles, matlab='matlab-spm8'):
