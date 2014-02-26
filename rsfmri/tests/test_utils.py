@@ -104,10 +104,14 @@ def test_realign_unwarp():
 def test_make_mean():
     _, one_file = make_test_data(fill = 1)
     _, two_file = make_test_data(fill = 2)
-    mean_file = utils.make_mean([one_file, two_file])
+    pth = os.path.dirname(one_file)
+    outfile = os.path.join(pth, 'meanfile.nii.gz')
+    mean_file = utils.make_mean([one_file, two_file], outfile)
+    npt.assert_equal(outfile, mean_file)
     dat = nibabel.load(mean_file).get_data()
     npt.assert_equal(dat.mean(), 1.5)
-    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii')
+    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii',
+                      outfile)
     os.unlink(one_file)
     os.unlink(two_file)   
 
