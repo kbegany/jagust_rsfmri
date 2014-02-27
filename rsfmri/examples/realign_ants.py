@@ -54,11 +54,12 @@ def process_subject(subdir):
 
     if exists:
         raise IOError('{0}: skipping {1} exists'.format(subdir, workdir))
-        
+
     aligned, move_arr = make_realign_splitfiles(rawdir, 
                                                 workdir, 
                                                 sid) 
- 
+    meanaligned = os.path.join(workdir, 'meanalign_{0}.nii.gz'.format(sid))
+    meanaligned = utils.make_mean(aligned, 'meanalign_'.format(sid))
     plot_write_movement(workdir, sid, move_arr)
     print '{0} : finished'.format(sid)
 
