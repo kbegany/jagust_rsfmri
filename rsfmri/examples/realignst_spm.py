@@ -69,6 +69,14 @@ def process_subject(subdir, tr, logger):
                                                     logger)
     if staligned is None:
         return None
+    ## Make MEAN
+    meanaligned = os.path.join(workdir, 'meanalign_{0}.nii.gz'.format(sid))
+    meanaligned = utils.make_mean(staligned, 'meanalign_'.format(sid))
+    logger.info(meanaligned)
+    ## Make aligned_4d
+    aligned4d = os.path.join(workdir, 'align4d_{0}.nii.gz'.format(sid)))
+    aligned4d = utils.fsl_make4d(staligned, aligned4d)
+    logger.info(aligned4d)
     ## spm only has 6 params, add empty 7th for plotting
     move_arr = np.hstack((move_arr, 
                           np.zeros((move_arr.shape[0],1))))
