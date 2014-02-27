@@ -4,6 +4,7 @@ from rsfmri import register
 
 """ This is done in native space, add warped after (Renaud others)??  
 
+despike?
 split raw func
 realign (no slicetime (ANTS))
 realign w/slicetime (spm)
@@ -14,10 +15,11 @@ files -> 4dfunc
 register anat to meanfunc
 pull whole brain, white, ventricle  rois (aparc)
 erode white and ventricle
-extract global, white, ventricle
 bandpass filter 4ddata
-bandpass filter regressors
+extract global, white, ventricle
+bandpass filter movement regressors
 generate fsf 
+censor motion from model??
 run model
 grab residuals
 
