@@ -2,13 +2,19 @@ import os, math
 import tempfile
 
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 import scipy.signal as ss
 import pandas
 
 import nibabel as ni
 
 _EPS = np.finfo(float).eps * 4.0
+
+
 
 def ants_to_matrix(infile):
     """ takes a transform defined by ANTS and turns it into a 
