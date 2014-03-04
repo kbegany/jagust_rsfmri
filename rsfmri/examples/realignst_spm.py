@@ -1,6 +1,7 @@
 import os
 import sys
 from glob import glob
+import argparse
 
 import numpy as np
 
@@ -11,12 +12,11 @@ from rsfmri import transform
 import logging
 
 
-def split(rawdir, destdir, sid, logger):
-    """ split files into 3D vols, 
+def split(rawdir, destdir, sid, logger, globstr='B*func4d.nii*'):
+    """ split files into 3D vols,
     return is None if it fails"""
-    globstr = 'B*func4d.nii*'
     files, nfiles = utils.get_files(rawdir, globstr)
-    print sid, nfiles
+    logger.info('SUBID: {0}, nfiles: {1}'.format(sid, nfiles))
     if not nfiles == 1:
         logger.error('Raw functional not found: {0}'.format(globstr))
         return None
@@ -30,7 +30,7 @@ def make_realignst_splitfiles(rawdir, destdir, sid, TR, logger):
     if funcs is None:
         logger.error('Raw dir missing data: {0}'.format(rawdir))
         return None, None
-    stvars = utils.get_slicetime_vars(funcs, TR=TR) 
+    stvars = utils.get_slicetime_vars(funcs, TR=TR)
     meanfunc, realigned, params = utils.spm_realign(funcs)
     if meanfunc is None:
         logger.error('{0}: spm realignment failed'%(funcs))
@@ -50,22 +50,26 @@ def plot_write_movement(destdir, sid, movement, logger):
     transform.plot_movement(movement, destdir)
     outfile = os.path.join(destdir, '{0}_movement.xls'.format(sid))
     transform.movementarr_to_pandas(movement, outfile)
-    
 
 
-def process_subject(subdir, tr, logger):
+
+def process_subject(subdir, tr, logger, despike=False):
+    """ process one subject despike (optional), realign and
+    do slicetime correction via SPM tools"""
+    workdirnme = 'spm_realign_slicetime'
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
-    workdir, exists = utils.make_dir(subdir, 'spm_realign_slicetime')
+
+    workdir, exists = utils.make_dir(subdir, workdirnme)
 
     if exists:
         logger.error('{0}: skipping {1} exists'.format(subdir, workdir))
         return None
 
-    staligned, move_arr = make_realignst_splitfiles(rawdir, 
-                                                    workdir, 
-                                                    sid, 
-                                                    tr, 
+    staligned, move_arr = make_realignst_splitfiles(rawdir,
+                                                    workdir,
+                                                    sid,
+                                                    tr,
                                                     logger)
     if staligned is None:
         return None
@@ -74,25 +78,25 @@ def process_subject(subdir, tr, logger):
     meanaligned = utils.make_mean(staligned, 'meanalign_'.format(sid))
     logger.info(meanaligned)
     ## Make aligned_4d
-    aligned4d = os.path.join(workdir, 'align4d_{0}.nii.gz'.format(sid)))
+    aligned4d = os.path.join(workdir, 'align4d_{0}.nii.gz'.format(sid))
     aligned4d = utils.fsl_make4d(staligned, aligned4d)
     logger.info(aligned4d)
     ## spm only has 6 params, add empty 7th for plotting
-    move_arr = np.hstack((move_arr, 
+    move_arr = np.hstack((move_arr,
                           np.zeros((move_arr.shape[0],1))))
     plot_write_movement(workdir, sid, move_arr, logger)
     logger.info('{0} : finished'.format(sid))
 
 
 
-def process_all(datadir, globstr, tr, logger):
+def process_all(datadir, globstr, tr, logger, despike=False):
     gstr = os.path.join(datadir, globstr)
     subjects = sorted(glob(gstr))
     if len(subjects) < 1:
         raise IOError('{0}: returns no subjects'.format(gstr))
     for subjectdir in subjects:
         logger.info(subjectdir)
-        res = process_subject(subjectdir, tr, logger)
+        res = process_subject(subjectdir, tr, logger, despike=despike)
         #res  = None
         if res is None:
             logger.error('{0}: skipped'.format(subjectdir))
@@ -103,29 +107,35 @@ def process_all(datadir, globstr, tr, logger):
 
 if __name__ == '__main__':
 
-    try:
-        datadir = sys.argv[1]
-    except:
-        raise IOError("""no data directory defined:
-            USAGE:
-            python realignst_spm.py /path/to/data TR
-            """)
 
+    parser = argparse.ArgumentParser(
+        description='Run subject through realign, slicetime (optional despike)')
+    parser.add_argument(
+        'datadir',
+        type=str,
+        help='directory holding data')
+    parser.add_argument(
+        'TR',
+        type=float,
+        help='(float) Repetition Time (TR) of timeseries data')
+    parser.add_argument(
+        '-d', '--despike',
+        dest='despike',
+        action='store_true'
+        )
     try:
-        # need tr
-        repetition_time = float(sys.argv[2])
+        args = parser.parse_args()
+        print args
     except:
-        raise IOError("""no TR (repetition time) defined:
-            USAGE:
-            python realignst_spm.py /path/to/data TR
-            """)        
+        parser.print_help()
 
+    """
 
     logger = logging.getLogger('rsfmri')
     logger.setLevel(logging.DEBUG)
     ts = reg.timestr()
     fname = os.path.split(__file__)[-1].replace('.py', '')
-    logfile = os.path.join(datadir, 
+    logfile = os.path.join(datadir,
                            'logs',
                            '{0}_logger_{1}.log'.format(fname, ts))
     fh = logging.FileHandler(logfile)
@@ -135,5 +145,5 @@ if __name__ == '__main__':
     logger.addHandler(fh)
     logger.addHandler(ch)
     logger.info(os.getenv('USER'))
-    process_all(datadir, 'B13*', repetition_time, logger)
-
+    process_all(datadir, 'B13*', repetition_time, logger, despike)
+    """
