@@ -25,11 +25,8 @@ def split(rawdir, destdir, sid, logger, globstr='B*func4d.nii*'):
     return funcs
 
 
-def make_realignst_splitfiles(rawdir, destdir, sid, TR, logger):
-    funcs = split(rawdir, destdir, sid, logger)
-    if funcs is None:
-        logger.error('Raw dir missing data: {0}'.format(rawdir))
-        return None, None
+def make_realignst(funcs, TR, logger):
+    """use spm to reaign and slicetime correct files"""
     stvars = utils.get_slicetime_vars(funcs, TR=TR)
     meanfunc, realigned, params = utils.spm_realign(funcs)
     if meanfunc is None:
@@ -56,7 +53,11 @@ def plot_write_movement(destdir, sid, movement, logger):
 def process_subject(subdir, tr, logger, despike=False):
     """ process one subject despike (optional), realign and
     do slicetime correction via SPM tools"""
+    globstr = 'B*func4d.nii*'
     workdirnme = 'spm_realign_slicetime'
+    if despike:
+        workdirnme = 'despike_' + workdirnme
+        globstr = 'ds' + globstr
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
 
@@ -66,17 +67,20 @@ def process_subject(subdir, tr, logger, despike=False):
         logger.error('{0}: skipping {1} exists'.format(subdir, workdir))
         return None
 
-    staligned, move_arr = make_realignst_splitfiles(rawdir,
-                                                    workdir,
-                                                    sid,
-                                                    tr,
-                                                    logger)
+    funcs = split(rawdir, destdir, sid, logger, globstr)
+    if funcs is None:
+        logger.error('Raw dir missing data: {0}'.format(rawdir))
+        return None
+
+    staligned, move_arr = make_realignst(funcs, tr, logger)
     if staligned is None:
         return None
+
     ## Make MEAN
     meanaligned = os.path.join(workdir, 'meanalign_{0}.nii.gz'.format(sid))
     meanaligned = utils.make_mean(staligned, 'meanalign_'.format(sid))
     logger.info(meanaligned)
+
     ## Make aligned_4d
     aligned4d = os.path.join(workdir, 'align4d_{0}.nii.gz'.format(sid))
     aligned4d = utils.fsl_make4d(staligned, aligned4d)

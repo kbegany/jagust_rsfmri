@@ -43,14 +43,14 @@ def make_datestr():
 def make_dir(base_dir, dirname='newdir'):
     """ makes a new directory if it doesnt alread exist
     returns full path
-    
+
     Parameters
     ----------
     base_dir : str
     the root directory
     dirname  : str (default pib_nifti)
     new directory name
-    
+
     Returns
     -------
     newdir  : str
@@ -111,7 +111,7 @@ def fsl_split4d(infile, outdir, sid):
         outfiles = out.outputs.out_files
         outfiles = [x for x in outfiles if not x == im.inputs.in_file]
         return outfiles
-    
+
 
 
 def get_slicetime(nslices):
@@ -123,7 +123,7 @@ def get_slicetime(nslices):
 
     Returns:
     sliceorder: list
-        list containing the order of slice acquisition used for slicetime 
+        list containing the order of slice acquisition used for slicetime
         correction
 
     """
@@ -135,12 +135,12 @@ def get_slicetime(nslices):
                                      np.arange(2,nslices+1,2)))
     # cast to a list for use with interface
     return list(sliceorder)
-        
+
 
 def get_slicetime_vars(infiles, TR=None):
     """
     uses nibabel to get slicetime variables
-    Returns: 
+    Returns:
     dict: dict
         nsclies : number of slices
         TA : acquisition Time
@@ -213,28 +213,24 @@ def unzip_file(infile):
             return base
 
 
-
 def afni_despike(in4d):
-    """ uses afni despike to despike a 4D dataset 
+    """ uses afni despike to despike a 4D dataset
     saves as ds_<filename>"""
     dspike = afni.Despike()
     dspike.inputs.in_file = in4d
     dspike.inputs.outputtype = 'NIFTI_GZ'
-    dspike.inputs.ignore_exception = True 
+    dspike.inputs.ignore_exception = True
     outfile = filemanip.fname_presuffix(in4d, 'ds')
     dspike.inputs.out_file = outfile
     res = dspike.run()
-    if not res.runtime.returncode == 0:
-        print out.runtime.stderr
-        return None
-    return res.outputs.out_file
+    return res.runtime.returncode, res
 
 
 def spm_realign(infiles, matlab='matlab-spm8'):
     """ Uses SPM to realign files"""
     startdir = os.getcwd()
     pth, _ = os.path.split(infiles[0])
-    os.chdir(pth) 
+    os.chdir(pth)
     rlgn = spm.Realign(matlab_cmd = matlab)
     rlgn.inputs.in_files = infiles
     rlgn.inputs.register_to_mean = True
@@ -244,7 +240,7 @@ def spm_realign(infiles, matlab='matlab-spm8'):
         print out.runtime.stderr
         return None, None, None
     return out.outputs.mean_image, out.outputs.realigned_files,\
-           out.outputs.realignment_parameters        
+           out.outputs.realignment_parameters
 
 
 def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):
@@ -257,10 +253,10 @@ def spm_realign_unwarp(infiles, matlab = 'matlab-spm8'):
 
     parameters = File; file holding the trans rot params
     """
-    
+
     startdir = os.getcwd()
     pth, _ = os.path.split(infiles[0])
-    os.chdir(pth)    
+    os.chdir(pth)
     ru = nipype_ext.RealignUnwarp(matlab_cmd = matlab)
     ru.inputs.in_files = infiles
     ruout = ru.run()
@@ -328,7 +324,7 @@ def extract_seed_ts(data, seeds):
         seed_dat[data_dat[:,:,:,0].squeeze() <=0] = 0
         tmp = data_dat[seed_dat > 0,:]
         meants.update({seednme:tmp.mean(0)})
-    return meants 
+    return meants
 
 
 def bandpass_data():
@@ -348,7 +344,7 @@ def write_filtered(data, outfile):
 
 
 def bandpass_regressor():
-    """ filters motion params and timeseries from csf and white matter 
+    """ filters motion params and timeseries from csf and white matter
     (also global signal when relevant)
     Use afni  1dBandpass, motion values in a 1d file"""
     pass
@@ -383,7 +379,7 @@ def spm_slicetime(infiles, matlab_cmd='matlab-spm8',stdict = None):
     """
     startdir = os.getcwd()
     pth, _ = os.path.split(infiles[0])
-    os.chdir(pth)    
+    os.chdir(pth)
     if stdict == None:
         stdict = get_slicetime_vars(infiles)
     sliceorder = stdict['sliceorder']
@@ -410,7 +406,7 @@ def spm_coregister(moving, target, apply_to_files=None,
     """
     startdir = os.getcwd()
     pth, _ = os.path.split(moving)
-    os.chdir(pth)    
+    os.chdir(pth)
     cr = spm.Coregister(matlab_cmd = matlab_cmd)
     cr.inputs.source = moving
     cr.inputs.target = target
@@ -432,7 +428,7 @@ def update_fsf(fsf, fsf_dict):
     ----------
     fsf : filename
         filename of default fsf file with default parameters
-        to use for your model 
+        to use for your model
     fsf_dict : dict
         dictionary holding data with the following keys:
         nuisance_dir
@@ -440,10 +436,10 @@ def update_fsf(fsf, fsf_dict):
         input_data
         TR
         nTR
-    
+
     Returns
     -------
-    tmp5 : string 
+    tmp5 : string
         string to write to new fsf file
     """
     original = open(fsf).read()
@@ -465,16 +461,16 @@ def write_fsf(fsf_string, outfile):
     with open(outfile, 'w+') as fid:
         fid.write(fsf_string)
 
-   
+
 def run_feat_model(fsf_file):
-    """ runs FSL's feat_model which uses the fsf file to generate 
+    """ runs FSL's feat_model which uses the fsf file to generate
     files necessary to run film_gls to fit design matrix to timeseries"""
     clean_fsf = fsf_file.strip('.fsf')
     cmd = 'feat_model %s'%(clean_fsf)
     out = pp.CommandLine(cmd).run()
     if not out.runtime.returncode == 0:
         return None, out.runtime.stderr
-            
+
     mat = fsf_file.replace('.fsf', '.mat')
     return mat, cmd
 
