@@ -33,13 +33,12 @@ def make_realignst(funcs, TR, logger):
         logger.error('{0}: spm realignment failed'%(funcs))
         return None, None
     st_realigned = utils.spm_slicetime(realigned, stdict = stvars)
+    utils.zip_files(realigned[1:]) # first is original func
+    utils.zip_files([meanfunc])
     if st_realigned is None:
         logger.error('{0}: slice timing failed'.format(realigned))
         return None, None
-    ## zip files
-    utils.zip_files(funcs)
-    utils.zip_files(realigned[1:]) # first is original func
-    utils.zip_files(st_realigned)
+
     movement_array = np.loadtxt(params)
     return st_realigned, movement_array
 
@@ -89,6 +88,9 @@ def process_subject(subdir, tr, logger, despike=False):
     move_arr = np.hstack((move_arr,
                           np.zeros((move_arr.shape[0],1))))
     plot_write_movement(workdir, sid, move_arr, logger)
+    ## zip files
+    utils.zip_files(funcs)
+    utils.zip_files(staligned)
     logger.info('{0} : finished'.format(sid))
 
 
@@ -155,6 +157,6 @@ if __name__ == '__main__':
     logger.info(ts)
     logger.info(args)
     #datadir, tr, despike = args.datadir, args.TR, args.despike
-    process_all(datadir, globstr, tr, logger, despike=False)
+    process_all(datadir, globstr, tr, logger, despike)
     #process_all(datadir, globstr, tr, logger, despike=False)
     #process_all(datadir, 'B13*', repetition_time, logger, despike)
