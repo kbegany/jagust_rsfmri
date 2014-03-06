@@ -24,7 +24,13 @@ import nipype_ext
 ########################
 
 ## naming structure used in scripts to make subdirectories
-workdirs = {
+defaults = {
+    'rawdir', 'raw',
+    'func_glob': 'B*func4d.nii*',
+    'despiked_func_glob' : 'dsB*func4d.nii*',
+    'anat_glob' : 'brainmask.nii*'
+    'aparc_glob' : 'aparcaseg.nii*',
+    'aligned' : 'align4d_{0}.nii*',
     'realign_ants':'ants_realign',
     'realign_spm': 'spm_realign_slicetime'
     'despike' : 'despike_',
@@ -296,6 +302,24 @@ def make_mean(niftilist, outfile):
     newimg = nibabel.Nifti1Image(newdat, affine)
     newimg.to_filename(outfile)
     return outfile
+
+def mean_from4d(in4d, outfile):
+    """ given a 4D files, calc mean across voxels (time)
+    and write new 3D file to outfile with same mapping
+    as in4d"""
+    ##FIXME consider unzipping files first if this is slow
+    ## Fast memmap doesnt work on zipped files very well
+    affine = nibabel.load(in4d).get_affine()
+    dat = nibabel.load(in4d).get_data()
+    mean = dat.mean(axis=-1)
+    newimg = ni.Nifti1Image(mean, affine)
+    try:
+        newimg.to_filename(outfile)
+        return outfile
+    except:
+        raise IOError('Unable to write {0}'.format(outfile))
+
+
 
 
 def aparc_mask(aparc, labels, outfile = 'bin_labelmask.nii.gz'):

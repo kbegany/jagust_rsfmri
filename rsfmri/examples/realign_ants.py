@@ -51,9 +51,9 @@ def plot_write_movement(destdir, sid, movement):
 def process_subject(subdir, despike=False):
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
-    workdir =  utils.workdirs['realign_ants']
+    workdir =  utils.defaults['realign_ants']
     if despike:
-        workdir = utils.workdirs['despike'] + workdir
+        workdir = utils.defaults['despike'] + workdir
     workdir, exists = utils.make_dir(subdir, workdir)
 
     if exists:

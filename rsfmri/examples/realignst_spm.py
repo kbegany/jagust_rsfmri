@@ -53,9 +53,9 @@ def process_subject(subdir, tr, logger, despike=False):
     """ process one subject despike (optional), realign and
     do slicetime correction via SPM tools"""
     globstr = 'B*func4d.nii*'
-    workdirnme = utils.workdirs['realign_spm']
+    workdirnme = utils.defaults['realign_spm']
     if despike:
-        workdirnme = utils.workdirs['despike'] + workdirnme
+        workdirnme = utils.defaults['despike'] + workdirnme
         globstr = 'ds' + globstr
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
