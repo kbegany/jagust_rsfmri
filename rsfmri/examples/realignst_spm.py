@@ -53,9 +53,9 @@ def process_subject(subdir, tr, logger, despike=False):
     """ process one subject despike (optional), realign and
     do slicetime correction via SPM tools"""
     globstr = 'B*func4d.nii*'
-    workdirnme = 'spm_realign_slicetime'
+    workdirnme = utils.workdirs['realign_spm']
     if despike:
-        workdirnme = 'despike_' + workdirnme
+        workdirnme = utils.workdirs['despike'] + workdirnme
         globstr = 'ds' + globstr
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
@@ -74,11 +74,6 @@ def process_subject(subdir, tr, logger, despike=False):
     staligned, move_arr = make_realignst(funcs, tr, logger)
     if staligned is None:
         return None
-
-    ## Make MEAN
-    meanaligned = os.path.join(workdir, 'meanalign_{0}.nii.gz'.format(sid))
-    meanaligned = utils.make_mean(staligned, 'meanalign_'.format(sid))
-    logger.info(meanaligned)
 
     ## Make aligned_4d
     aligned4d = os.path.join(workdir, 'align4d_{0}.nii.gz'.format(sid))
@@ -114,7 +109,12 @@ def process_all(datadir, globstr, tr, logger, despike=False):
 if __name__ == '__main__':
 
 
+    epilog = """
+    python realignst_spm.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
+    """
+
     parser = argparse.ArgumentParser(
+        epilog = epilog,
         description='Run subject through realign, slicetime (optional despike)')
     parser.add_argument(
         'datadir',
@@ -134,6 +134,7 @@ if __name__ == '__main__':
         dest='globstr',
         default='B*',
         help='globstring to select subject directories ("B*")')
+
     try:
         args = parser.parse_args()
         print args

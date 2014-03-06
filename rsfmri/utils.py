@@ -23,6 +23,17 @@ import nipype_ext
 
 ########################
 
+## naming structure used in scripts to make subdirectories
+workdirs = {
+    'realign_ants':'ants_realign',
+    'realign_spm': 'spm_realign_slicetime'
+    'despike' : 'despike_',
+    'coreg' : 'coreg_masks'
+    'bandpass' : 'bandpass',
+    'model_fsl': 'model_fsl'
+    }
+}
+
 def get_files(dir, globstr):
     """
     uses glob to find dir/globstr

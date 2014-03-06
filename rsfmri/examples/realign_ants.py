@@ -51,9 +51,9 @@ def plot_write_movement(destdir, sid, movement):
 def process_subject(subdir, despike=False):
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
-    workdir = 'ants_realign'
+    workdir =  utils.workdirs['realign_ants']
     if despike:
-        workdir = 'despike_' + workdir
+        workdir = utils.workdirs['despike'] + workdir
     workdir, exists = utils.make_dir(subdir, workdir)
 
     if exists:
@@ -61,10 +61,6 @@ def process_subject(subdir, despike=False):
 
     funcs = split(rawdir, workdir, sid, despike)
     aligned, move_arr = make_realign(funcs)
-
-    meanaligned = os.path.join(workdir, 'meanalign_{0}.nii.gz'.format(sid))
-    meanaligned = utils.make_mean(aligned, 'meanalign_'.format(sid))
-    print 'meanaligned is:',meanaligned
 
     ## Make aligned_4d
     aligned4d = os.path.join(workdir, 'align4d_{0}.nii.gz'.format(sid))
