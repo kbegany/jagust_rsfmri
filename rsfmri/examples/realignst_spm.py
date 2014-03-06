@@ -67,7 +67,7 @@ def process_subject(subdir, tr, logger, despike=False):
         logger.error('{0}: skipping {1} exists'.format(subdir, workdir))
         return None
 
-    funcs = split(rawdir, destdir, sid, logger, globstr)
+    funcs = split(rawdir, workdir, sid, logger, globstr)
     if funcs is None:
         logger.error('Raw dir missing data: {0}'.format(rawdir))
         return None
@@ -127,15 +127,21 @@ if __name__ == '__main__':
         dest='despike',
         action='store_true'
         )
+    parser.add_argument('-g','--globstr',
+        type=str,
+        dest='globstr',
+        default='B*',
+        help='globstring to select subject directories ("B*")')
     try:
         args = parser.parse_args()
         print args
     except:
         parser.print_help()
+        sys.exit()
 
-    """
-
-    logger = logging.getLogger('rsfmri')
+    datadir, tr = args.datadir, args.TR
+    globstr, despike = args.globstr, args.despike
+    logger = logging.getLogger('realignst_spm')
     logger.setLevel(logging.DEBUG)
     ts = reg.timestr()
     fname = os.path.split(__file__)[-1].replace('.py', '')
@@ -144,10 +150,11 @@ if __name__ == '__main__':
                            '{0}_logger_{1}.log'.format(fname, ts))
     fh = logging.FileHandler(logfile)
     fh.setLevel(logging.DEBUG)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.INFO)
     logger.addHandler(fh)
-    logger.addHandler(ch)
     logger.info(os.getenv('USER'))
-    process_all(datadir, 'B13*', repetition_time, logger, despike)
-    """
+    logger.info(ts)
+    logger.info(args)
+    #datadir, tr, despike = args.datadir, args.TR, args.despike
+    process_all(datadir, globstr, tr, logger, despike=False)
+    #process_all(datadir, globstr, tr, logger, despike=False)
+    #process_all(datadir, 'B13*', repetition_time, logger, despike)
