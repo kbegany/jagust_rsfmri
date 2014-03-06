@@ -13,17 +13,17 @@ from nipype.interfaces.base import CommandLine
 from nipype.utils.filemanip import (split_filename, fname_presuffix)
 
 
-ANTSPATH='/home/jagust/fmri-pstask/pilot/ANTS/ANTs-1.9.v4-Linux/bin'
+ANTSPATH='/home/jagust/cindeem/bin/ANTs-1.9.v4-Linux/bin'
 module_logger = logging.getLogger('rsfmri.register')
 
 def timestr():
-    return datetime.datetime.strftime(datetime.datetime.now(), 
+    return datetime.datetime.strftime(datetime.datetime.now(),
             '%Y-%m-%d-%H-%M')
 
 def function_logger(indir, console = False):
     logfile = os.path.join(indir, 'logger_%s.log'%(timestr()))
     logging.basicConfig(filename=logfile,level=logging.DEBUG)
-    
+
 
     logger = logging.getLogger('rsfmri.register')
     logger.setLevel(logging.DEBUG)
@@ -62,7 +62,7 @@ def grow_mask(infile, othermask=None, size=3):
     othermask : string or None
         filename of optianl image used as mask
     size : int
-        size of symmetric kernel, must be odd number 
+        size of symmetric kernel, must be odd number
     """
     img = ni.load(infile)
     dat = img.get_data().squeeze()
@@ -132,10 +132,10 @@ def affine_register_cc(target, moving):
     # make command
     # CC [target,moving,1,5] # no spaces!
     # cross-correl target moving weight region_radius
-    similarity = ''.join(['CC', '[', tnme, ',', mnme, ',', 
+    similarity = ''.join(['CC', '[', tnme, ',', mnme, ',',
         '1',',','5', ']'])
     outfile_prefix = make_aff_filename(target, moving)
-    fullcmd = ' '.join([_basecmd, dim, '-m', similarity, '-i', '0', 
+    fullcmd = ' '.join([_basecmd, dim, '-m', similarity, '-i', '0',
         '-o', outfile_prefix])
     logging.info(fullcmd)
     res = CommandLine(fullcmd, ignore_exception=True).run()
@@ -152,8 +152,8 @@ def affine_register_cc(target, moving):
 
 
 def affine_register_mi(target, moving, mask=None):
-    """ uses ANTS to create an affine mapping between different 
-    modalities of the same subjects anatomy, 
+    """ uses ANTS to create an affine mapping between different
+    modalities of the same subjects anatomy,
     uses mututal information """
     logger = logging.getLogger('antsregister.affine_register_mi')
     scriptdir = os.getcwd()
@@ -171,10 +171,10 @@ def affine_register_mi(target, moving, mask=None):
     # specify command line options
     # MI [target,moving,1,32] #no witespaces!
     # mutualinfo  target moving weight  number_hist_bins
-    similarity = ''.join(['MI', '[', tnme, ',', mnme, ',', 
+    similarity = ''.join(['MI', '[', tnme, ',', mnme, ',',
         '1',',','32', ']'])
     outfile_prefix = make_aff_filename(target, moving)
-    fullcmd = ' '.join([_basecmd, dim, '-m', similarity, '-i', '0', 
+    fullcmd = ' '.join([_basecmd, dim, '-m', similarity, '-i', '0',
         '-o', outfile_prefix])
     if mask is not None:
         maskpth, masknme = os.path.split(mask)
@@ -194,19 +194,19 @@ def affine_register_mi(target, moving, mask=None):
 
 
 def n4_biascorrect(filename):
-    """N4BiasFieldCorrection $DIM -i $MOVING -o ${OUTPUTNAME}repaired.nii.gz 
+    """N4BiasFieldCorrection $DIM -i $MOVING -o ${OUTPUTNAME}repaired.nii.gz
     -s 2 -c [50x50x50x50,0.000001] -b [200]
     """
     _basecmd = os.path.join(ANTSPATH, 'N4BiasFieldCorrection')
     logger = logging.getLogger('antsregister.n4_biascorrect')
     scriptdir = os.getcwd()
-    
+
     outfile = fname_presuffix(filename, 'n4_')
     tpth, tnme = os.path.split(filename)
     _, outnme = os.path.split(outfile)
     os.chdir(tpth)
     cmd = ' '.join([
-        _basecmd, 
+        _basecmd,
         '3',
         '-i',
         tnme,
@@ -224,11 +224,11 @@ def n4_biascorrect(filename):
     os.chdir(scriptdir)
 
     if  res.runtime.returncode == 0 and not 'Exception' in res.runtime.stderr:
-        
+
         logger.info(outfile)
         return outfile
     else:
-        
+
         logger.error(res.runtime.stderr)
         return None
     pass
@@ -242,7 +242,7 @@ def make_outfile(filename, prefix = 'xfm_', inverse = False):
 
 def reslice(moving, targetspace, nearestn=False):
     """ reslice data in moving to space of targetspace image
-    default linear interpolation unless nearestn is True 
+    default linear interpolation unless nearestn is True
     then uses nearest neighbor"""
     _basecmd = os.path.join(ANTSPATH, 'WarpImageMultiTransform')
     logger = logging.getLogger('antsregister.reslice')
@@ -250,10 +250,10 @@ def reslice(moving, targetspace, nearestn=False):
     if nearestn:
         nn = '--use-NN'
     outfile = make_outfile(moving, prefix = 'rsl_' + nn.replace('--use-','') )
-    cmd =  ' '.join([ _basecmd, 
+    cmd =  ' '.join([ _basecmd,
                       '3',
                       moving,
-                      outfile, 
+                      outfile,
                       '-R',
                       targetspace,
                       '--reslice-by-header',
@@ -276,7 +276,7 @@ def apply_transform(moving, transform, outfile=None, target=None, use_nn = False
     moving : filename
         filename of images transformes are being applied to
     transform : string
-        string indicating transforms 
+        string indicating transforms
         examples
         'a_to_b.Affine.txt'  simple affine
         ' -i a_to_b.Affine.txt' inverse affine
@@ -307,22 +307,22 @@ def apply_transform(moving, transform, outfile=None, target=None, use_nn = False
         prefix = 'invxfm_' if '-i' in transform else 'xfm_'
         outfile = fname_presuffix(moving, prefix)
     if target is not None:
-        fullcmd = ' '.join([_basecmd, dim, moving, outfile, 
+        fullcmd = ' '.join([_basecmd, dim, moving, outfile,
             '-R', target, transform, nn])
     else:
-        fullcmd = ' '.join([_basecmd, dim, moving, outfile, 
+        fullcmd = ' '.join([_basecmd, dim, moving, outfile,
             transform, nn])
     logging.info(fullcmd)
     res = CommandLine(fullcmd).run()
     os.chdir(scriptdir)
     if  res.runtime.returncode == 0:
         logger.info(fullcmd)
-        return outfile 
+        return outfile
     else:
         logger.error(res.runtime.stderr)
         return None
 
-   
+
 
 
 
