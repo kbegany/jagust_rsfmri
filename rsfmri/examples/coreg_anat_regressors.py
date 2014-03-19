@@ -37,6 +37,12 @@ def get_file(workdir, type_glob):
     raise IOError('{0} in {1} not found'.format(type_glob, workdir))
 
 
+def copy_file(infile, dest):
+    cmd = 'cp {0} {1}'.format(infile, dest)
+    os.system(cmd)
+    _, nme = os.path.split(infile)
+    return os.path.join(dest, nme)
+
 def process_subject(subdir):
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
@@ -46,7 +52,23 @@ def process_subject(subdir):
     bmask = get_file(rawdir, utils.defaults['anat_glob'])
     aparc = get_file(rawdir, utils.defaults['aparc_glob'])
     # copy files to coregdir
-    ## FIXME continue from here
+    bmask = copy_file(bmask, coregdir)
+    aparc = copy_file(aparc, coregdir)
+    ## make mean
+    mean_aligned = os.path.join(coregdir,
+        '{0}_meanaligned.nii.gz'.format(sid))
+    mean_aligned = utils.mean_from4d(aligned, mean_aligned)
+    ## register mean to bmask
+    xfm = reg.affine_register_mi(bmask, mean_aligned)
+    ## invert and apply to brainmask and aparc
+    if xfm is None:
+        raise IOError('{0}: meanepi -> anat failed')
+    transform = '-i {0}'.format(xfm)
+    rbmask = reg.apply_transform(bmask, transform, target=mean_aligned)
+    raparc = reg.apply_transform(aparc, transform,
+        target=mean_aligned, use_nn=True)
+    ## make masks
+
 
 
 
