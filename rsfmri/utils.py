@@ -5,7 +5,7 @@ import json
 
 import numpy as np
 
-
+from skimage.morphology import binary_erosion
 from nitime.timeseries import TimeSeries
 from nitime.analysis import SpectralAnalyzer, FilterAnalyzer
 
@@ -25,20 +25,21 @@ import nipype_ext
 
 ## naming structure used in scripts to make subdirectories
 defaults = {
-    'rawdir', 'raw',
+    'rawdir': 'raw',
     'func_glob': 'B*func4d.nii*',
     'despiked_func_glob' : 'dsB*func4d.nii*',
-    'anat_glob' : 'brainmask.nii*'
+    'anat_glob' : 'brainmask.nii*',
     'aparc_glob' : 'aparcaseg.nii*',
     'aligned' : 'align4d_{0}.nii*',
     'realign_ants':'ants_realign',
-    'realign_spm': 'spm_realign_slicetime'
+    'realign_spm': 'spm_realign_slicetime',
     'despike' : 'despike_',
-    'coreg' : 'coreg_masks'
+    'coreg' : 'coreg_masks',
     'bandpass' : 'bandpass',
-    'model_fsl': 'model_fsl'
+    'model_fsl': 'model_fsl',
+    'wm_labels': [2,41, 77,78,79],
+    'vent_labels': [4,5,14,15,28,43,44,60,72,75,76]
     }
-}
 
 def get_files(dir, globstr):
     """
@@ -312,7 +313,7 @@ def mean_from4d(in4d, outfile):
     affine = nibabel.load(in4d).get_affine()
     dat = nibabel.load(in4d).get_data()
     mean = dat.mean(axis=-1)
-    newimg = ni.Nifti1Image(mean, affine)
+    newimg = nibabel.Nifti1Image(mean, affine)
     try:
         newimg.to_filename(outfile)
         return outfile
@@ -341,6 +342,22 @@ def aparc_mask(aparc, labels, outfile = 'bin_labelmask.nii.gz'):
     outf = os.path.join(pth, outfile)
     masked_img.to_filename(outf)
     return outf
+
+def erode(infile):
+    """ use skimage.morphology to quickly erode binary mask"""
+    img = nibabel.load(infile)
+    dat = img.get_data().squeeze()
+    kernel = np.zeros((3,3,3))
+    kernel[1,:,:] = 1
+    kernel[:,1,:] = 1
+    kernel[:,:,1] = 1
+    eroded = binary_erosion(dat, kernel)
+    eroded = eroded.astype(int)
+    newfile = filemanip.fname_presuffix(infile, 'e')
+    newimg = nibabel.Nifti1Image(eroded, img.get_affine())
+    newimg.to_filename(newfile)
+    return newfile
+
 
 def get_seedname(seedfile):
     _, nme, _ = filemanip.split_filename(seedfile)
