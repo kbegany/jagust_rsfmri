@@ -122,5 +122,6 @@ if __name__ == '__main__':
     # taskid starts at 1, so we need to subtract 1 to work with code
     taskid = int(taskid) -1
     fulldir = os.path.join(args.datadir, args.globstr)
+    print fulldir
     allsub = sorted(glob(fulldir))
     process_subject(allsub[taskid], args.despike, args.spm)

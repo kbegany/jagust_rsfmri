@@ -2,7 +2,7 @@
 from rsfmri import utils
 from rsfmri import register
 
-""" This is done in native space, add warped after (Renaud others)??  
+""" This is done in native space, add warped after (Renaud others)??
 
 despike?
 split raw func
@@ -18,7 +18,7 @@ erode white and ventricle
 bandpass filter 4ddata
 extract global, white, ventricle
 bandpass filter movement regressors
-generate fsf 
+generate fsf
 censor motion from model??
 run model
 grab residuals
