@@ -320,7 +320,17 @@ def mean_from4d(in4d, outfile):
     except:
         raise IOError('Unable to write {0}'.format(outfile))
 
-
+def simple_mask(dataf, maskf, outfile, thr=0):
+    """ sets values in data to zero if they are zero in mask"""
+    img = nibabel.load(dataf)
+    dat = img.get_data()
+    mask = nibabel.load(maskf).get_data()
+    if not dat.shape == mask.shape:
+        raise IOError('shape mismatch {0}, {1}'.format(dataf, maskf))
+    dat[mask <=thr] = 0
+    newimg = nibabel.Nifti1Image(dat, img.get_affine())
+    newimg.to_filename(outfile)
+    return outfile
 
 
 def aparc_mask(aparc, labels, outfile = 'bin_labelmask.nii.gz'):
