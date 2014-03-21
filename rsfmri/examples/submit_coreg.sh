@@ -40,11 +40,11 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
 # run despiked spm data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -d -spm
 # run despiked ANTS data
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -d
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -d
 # run non-despiked spm data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -spm
 # run non-despiked ANTS data
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220
 
 
 
