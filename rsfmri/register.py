@@ -13,7 +13,7 @@ from nipype.interfaces.base import CommandLine
 from nipype.utils.filemanip import (split_filename, fname_presuffix)
 
 
-ANTSPATH='/home/jagust/cindeem/bin/ANTs-1.9.v4-Linux/bin#'
+ANTSPATH='/home/jagust/cindeem/bin/ANTs-1.9.v4-Linux/bin'
 module_logger = logging.getLogger('rsfmri.register')
 
 def timestr():

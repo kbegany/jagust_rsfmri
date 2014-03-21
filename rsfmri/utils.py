@@ -411,6 +411,12 @@ def bandpass_regressor():
     Use afni  1dBandpass, motion values in a 1d file"""
     pass
 
+def zero_pad_movement(dataframe):
+    #insert row of zeros into a dataframe
+    rows, cols = dataframe.shape
+    newdat = np.zeros((rows+1, cols))
+    return pandas.DataFrame(newdat, columns = dataframe.columns)
+
 
 def fsl_bandpass(infile, tr, lowf=0.0083, highf=0.15):
     """ use fslmaths to bandpass filter a 4d file"""
