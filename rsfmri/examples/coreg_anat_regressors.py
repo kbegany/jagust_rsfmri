@@ -2,6 +2,7 @@ import os
 import sys
 from glob import glob
 import argparse
+import logging
 
 
 from rsfmri import utils
@@ -47,10 +48,28 @@ def copy_file(infile, dest):
     _, nme = os.path.split(infile)
     return os.path.join(dest, nme)
 
+def setup_logging(workdir, sid):
+    logger = logging.getLogger('coreg')
+    logger.setLevel(logging.DEBUG)
+    ts = reg.timestr()
+    fname = os.path.split(__file__)[-1].replace('.py', '')
+    logfile = os.path.join(workdir,
+                           '{0}_{1}_{2}.log'.format(sid, fname, ts))
+    fh = logging.FileHandler(logfile)
+    fh.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
+    logger.info(__file__)
+    logger.info(ts)
+    logger.info(workdir)
+    logger.info(os.getenv('USER'))
+    return logger
+
 def process_subject(subdir, despike=False, spm=False):
+
     _, sid = os.path.split(subdir)
     rawdir = os.path.join(subdir, 'raw')
     rlgndir, coregdir = find_make_workdir(subdir, despike, spm)
+    logger = setup_logging(coregdir, sid)
     globtype = utils.defaults['aligned'].format(sid)
     aligned = get_file(rlgndir, globtype)
     bmask = get_file(rawdir, utils.defaults['anat_glob'])
@@ -58,16 +77,25 @@ def process_subject(subdir, despike=False, spm=False):
     # copy files to coregdir
     bmask = copy_file(bmask, coregdir)
     aparc = copy_file(aparc, coregdir)
+    ## mask brainmask with aparc
+    #bmask = utils.simple_mask(bmask, aparc, bmask)
     ## make mean
     mean_aligned = os.path.join(coregdir,
         '{0}_meanaligned.nii.gz'.format(sid))
     mean_aligned = utils.mean_from4d(aligned, mean_aligned)
+    logger.info(mean_aligned)
+    ## remove small values from mean (helps bias correction etc)
+    mean_aligned = utils.simple_mask(mean_aligned,
+        mean_aligned, mean_aligned, thr=100)
+    logger.info('thr meanaligned by {}'.format(100))
     ## register mean to bmask
     xfm = reg.affine_register_mi(bmask, mean_aligned)
     ## invert and apply to brainmask and aparc
     if xfm is None:
-        raise IOError('{0}: meanepi -> anat failed')
+        logger.error('ERROR: {0}: meanepi -> anat failed'.format(sid))
+        raise IOError('{0}: meanepi -> anat failed'.format(sid))
     transform = '-i {0}'.format(xfm)
+    logger.info(transform)
     rbmask = reg.apply_transform(bmask, transform, target=mean_aligned)
     raparc = reg.apply_transform(aparc, transform,
         target=mean_aligned, use_nn=True)
@@ -80,6 +108,10 @@ def process_subject(subdir, despike=False, spm=False):
     vent_mask = utils.aparc_mask(raparc, vent_labels, vent_maskf)
     eroded_wm = utils.erode(wm_mask)
     eroded_vent = utils.erode(vent_mask)
+    logger.info(vent_mask)
+    logger.info(eroded_vent)
+    logger.info(wm_mask)
+    logger.info(eroded_wm)
 
 
 
