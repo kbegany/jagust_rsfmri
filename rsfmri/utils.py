@@ -38,7 +38,8 @@ defaults = {
     'bandpass' : 'bandpass',
     'model_fsl': 'model_fsl',
     'wm_labels': [2,41, 77,78,79],
-    'vent_labels': [4,5,14,15,28,43,44,60,72,75,76]
+    'vent_labels': [4,5,14,15,28,43,44,60,72,75,76],
+    'movement_names' : ['mc{}.1D'.format(x+1) for x in xrange(6)]
     }
 
 def get_files(dir, globstr):
@@ -378,14 +379,13 @@ def extract_seed_ts(data, seeds):
     """ check shape match of data and seed if same assume registration
     extract mean of data in seed > 0"""
     data_dat = nibabel.load(data).get_data()
-    meants = {}
+    meants = []
     for seed in seeds:
-        seednme = get_seedname(seed)
         seed_dat = nibabel.load(seed).get_data().squeeze()
         assert seed_dat.shape == data_dat.shape[:3]
         seed_dat[data_dat[:,:,:,0].squeeze() <=0] = 0
         tmp = data_dat[seed_dat > 0,:]
-        meants.update({seednme:tmp.mean(0)})
+        meants.append(tmp.mean(0))
     return meants
 
 
@@ -396,7 +396,8 @@ def bandpass_data():
     pass
 
 def nitime_bandpass(data, tr, ub=0.15, lb=0.0083):
-    """ use nittime to bandpass filter regressors"""
+    """ use nittime to bandpass filter regressors
+    format of data shoud be samples X timepoints"""
     ts = TimeSeries(data, sampling_interval=tr)
     filtered_ts = FilterAnalyzer(ts, ub=ub, lb=lb)
     return filtered_ts.data
@@ -418,7 +419,7 @@ def zero_pad_movement(dataframe):
     return pandas.DataFrame(newdat, columns = dataframe.columns)
 
 
-def fsl_bandpass(infile, tr, lowf=0.0083, highf=0.15):
+def fsl_bandpass(infile, outfile, tr, lowf=0.0083, highf=0.15):
     """ use fslmaths to bandpass filter a 4d file"""
     startdir = os.getcwd()
     pth, nme = os.path.split(infile)
@@ -427,6 +428,7 @@ def fsl_bandpass(infile, tr, lowf=0.0083, highf=0.15):
     high_freq = 1 / highf / 2 / tr
     im = fsl.ImageMaths()
     im.inputs.in_file = infile
+    im.inputs.out_file = outfile
     op_str = ' '.join(['-bptf',str(low_freq), str(high_freq)])
     im.inputs.op_string = op_str
     im.inputs.suffix = 'bpfilter_l%2.2f_h%2.2f'%(low_freq, high_freq)
