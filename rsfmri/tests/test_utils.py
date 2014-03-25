@@ -63,7 +63,7 @@ def test_get_slicetime_vars():
     npt.assert_equal(stdict['TR'], TR)
     npt.assert_equal(stdict['nslices'], nslices)
     ## cleanup
-    os.unlink(tmpnii) 
+    os.unlink(tmpnii)
 
 def test_save_json():
     nslices, tmpnii = make_test_data()
@@ -77,7 +77,7 @@ def test_save_json():
     # cleanup
     os.unlink(tmpnii)
     os.unlink(tmpfile)
-    
+
 def test_load_json():
     # make temp files
     nslices, tmpnii = make_test_data()
@@ -113,7 +113,7 @@ def test_make_mean():
     npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii',
                       outfile)
     os.unlink(one_file)
-    os.unlink(two_file)   
+    os.unlink(two_file)
 
 def test_aparc_mask():
     # make label dat
@@ -151,10 +151,9 @@ def test_extract_seed_ts():
     seedimg.to_filename(tmpseed)
     # test mean
     meants = utils.extract_seed_ts(tmp4d, [tmpseed])
-    npt.assert_equal(isinstance(meants, dict), True)
-    keys = meants.keys()
-    npt.assert_almost_equal(meants[keys[0]][0], 0.49458008)
-    npt.assert_equal(meants[keys[0]].shape, (40,))
+    npt.assert_equal(isinstance(meants, list), True)
+    npt.assert_almost_equal(meants[0][0], 0.49458008)
+    npt.assert_equal(meants[0].shape, (40,))
     # test missing
     dat[0,0,:] = 0
     img = nibabel.Nifti1Image(dat, np.eye(4))
