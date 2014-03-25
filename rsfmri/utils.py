@@ -39,7 +39,8 @@ defaults = {
     'model_fsl': 'model_fsl',
     'wm_labels': [2,41, 77,78,79],
     'vent_labels': [4,5,14,15,28,43,44,60,72,75,76],
-    'movement_names' : ['mc{}.1D'.format(x+1) for x in xrange(6)]
+    'movement_names' : ['mc{}.1D'.format(x+1) for x in xrange(6)],
+    'noise_names' : ['wm.1D', 'csf.1D', 'global.1D']
     }
 
 def get_files(dir, globstr):
