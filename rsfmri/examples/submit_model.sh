@@ -38,13 +38,18 @@
 # Run python program
 export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
 # run despiked spm data
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -spm
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -spm
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -spm -gsr
 # run despiked ANTS data
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -gsr
 # run non-despiked spm data
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm -gsr
 # run non-despiked ANTS data
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -gsr
+
 
 
 

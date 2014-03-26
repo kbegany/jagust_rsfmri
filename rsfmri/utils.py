@@ -4,6 +4,7 @@ from glob import glob
 import json
 
 import numpy as np
+import pandas
 
 from skimage.morphology import binary_erosion
 from nitime.timeseries import TimeSeries
@@ -515,15 +516,15 @@ def update_fsf(fsf, fsf_dict):
     """
     original = open(fsf).read()
     tmp1 = original.replace('nuisance_dir',
-                            fsf_dict['nuisance_dir'])
+        fsf_dict['nuisance_dir'])
     tmp2 = tmp1.replace('nuisance_model_outputdir',
-                        fsf_dict['nuisance_outdir'])
+        fsf_dict['nuisance_outdir'])
     tmp3 = tmp2.replace('nuisance_model_input_data',
-                        fsf_dict['input_data'])
+        fsf_dict['input_data'])
     tmp4 = tmp3.replace('nuisance_model_TR',
-                        fsf_dict['TR'])
+        fsf_dict['TR'])
     tmp5 = tmp4.replace('nuisance_model_numTRs',
-                        fsf_dict['nTR'])
+        fsf_dict['nTR'])
     return tmp5
 
 def write_fsf(fsf_string, outfile):
@@ -538,7 +539,7 @@ def run_feat_model(fsf_file):
     files necessary to run film_gls to fit design matrix to timeseries"""
     clean_fsf = fsf_file.strip('.fsf')
     cmd = 'feat_model %s'%(clean_fsf)
-    out = pp.CommandLine(cmd).run()
+    out = CommandLine(cmd).run()
     if not out.runtime.returncode == 0:
         return None, out.runtime.stderr
 
@@ -548,6 +549,8 @@ def run_feat_model(fsf_file):
 
 def run_film(data, design, results_dir):
     minval = nibabel.load(data).get_data().min()
+    if minval < 0:
+        minval=0
     film = fsl.FILMGLS()
     film.inputs.in_file = data
     film.inputs.design_file = design
