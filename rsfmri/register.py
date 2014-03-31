@@ -233,6 +233,125 @@ def n4_biascorrect(filename):
         return None
     pass
 
+def generate_warp(moving, target, logger):
+    """ uses ANTS to warp moving to target
+    ANTS 3 -m CC[target,moving,1,2] -i 10x50x50x20
+    -o <outfile>.nii.gz -t SyN[0.25] -r Gauss[3,0]
+    both images muct be indirectory"""
+    scriptdir = os.getcwd()
+    tpth, tnme = os.path.split(target)
+    mpth, mnme = os.path.split(moving)
+    if not tpth == mpth:
+        raise IOError('target and moving need to be in same dir'\
+            't: %s, m: %s'%(target, moving))
+    if tpth == '':
+        raise IOError('need to specify location of files, not %s'%tpth)
+
+    os.chdir(tpth)
+    _basecmd = os.path.join(ANTSPATH,'ANTS')
+    dim = '3'
+    similarity = ''.join([
+        'CC[',
+        tnme,
+        ',',
+        mnme,
+        ',1,2]'])
+    iters = '10x50x50x20'
+    outfileprefix = make_aff_filename(moving, target)
+    fullcmd = ' '.join([
+        _basecmd, dim, '-m', similarity, '-i', iters,
+        '-o', outfileprefix, '-t', 'SyN[0.25]',
+        '-r', 'Gauss[3,0]'
+        ])
+    res = CommandLine(fullcmd).run()
+    os.chdir(scriptdir)
+
+    if  res.runtime.returncode == 0 and not 'Exception' in res.runtime.stderr:
+        logger.info(fullcmd)
+        warpf = os.path.join(tpth, outfileprefix + 'Warp.nii.gz')
+        aff = os.path.join(tpth, outfileprefix + 'Affine.txt')
+        logger.info(warpf)
+        logger.info(aff)
+        return warpf, aff
+    else:
+        logger.error(fullcmd)
+        logger.error(res.runtime.stderr)
+        return None, None
+
+
+def apply_warp(moving, target, warp, affine, logger):
+    """
+    WarpImageMultiTransform 3 moving outfile
+    -R target <fname>Warp.nii.gz <fname>Affine.txt
+    """
+    scriptdir = os.getcwd()
+    tpth, tnme = os.path.split(target)
+    mpth, mnme = os.path.split(moving)
+    _, warpf = os.path.split(warp)
+    _, aff = os.path.split(affine)
+    if not tpth == mpth:
+        os.chdir(scriptdir)
+        raise IOError('target and moving need to be in same dir'\
+            't: %s, m: %s'%(target, moving))
+    if mpth == '':
+        os.chdir(scriptdir)
+        raise IOError('need to specify location of files, not %s'%tpth)
+
+    os.chdir(mpth)
+    #ANTSPATH='/usr/local/bin'
+    _basecmd = os.path.join(ANTSPATH,'WarpImageMultiTransform')
+    dim = '3'
+    #warpfiles = [warpf.replace('Warp', 'Warp'+x) for x in ('xvec', 'yvec','zvec')]
+    _, outfile = os.path.split(fname_presuffix(moving, 'warpd_'))
+    fullcmd = ' '.join([
+        _basecmd, dim,
+        mnme, outfile,
+        '-R', tnme,
+        warpf,
+        aff
+        ])
+    print fullcmd
+    res = os.system(fullcmd)
+    os.chdir(scriptdir)
+
+    if  res == 0:
+        logger.info(fullcmd)
+        return outfile
+    else:
+        logger.error(fullcmd)
+        logger.error('ERROR')
+        return None
+
+def generate_jacobian(warpf, template, logger):
+    """ANTSJacobian 3 myWarp.nii fileprefix 1 template 1 """
+    scriptdir = os.getcwd()
+    tpth, tnme = os.path.split(template)
+    if tpth == '':
+        raise IOError('need to specify location of files, not %s'%tpth)
+
+    os.chdir(tpth)
+    _basecmd = os.path.join(ANTSPATH,'ANTSJacobian')
+    dim = '3'
+    _, outprefix, _ = split_filename(warpf)
+    fullcmd = ' '.join([
+        _basecmd, dim,
+        warpf,
+        outprefix,
+        '1',
+        template,
+        '1'
+        ])
+    res = CommandLine(fullcmd).run()
+    os.chdir(scriptdir)
+
+    if  res.runtime.returncode == 0 and not 'Exception' in res.runtime.stderr:
+        logger.info(fullcmd)
+        return True
+    else:
+        logger.error(fullcmd)
+        logger.error(res.runtime.stderr)
+        raise IOError(res.runtime.stderr)
+
 
 def make_outfile(filename, prefix = 'xfm_', inverse = False):
     if inverse:

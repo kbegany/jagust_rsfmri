@@ -30,6 +30,12 @@ censor motion from model??
 run model
 grab residuals
 
+smoothing
+3dBlurToFWHM (for uniform smoothing)
+-detrend -automask -temper options were used
+http://www.ncbi.nlm.nih.gov/pubmed/24657356
+
+
 """
 
 

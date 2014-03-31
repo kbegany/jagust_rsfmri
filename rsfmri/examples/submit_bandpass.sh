@@ -6,7 +6,7 @@
 
 # specify number of jobs to run (1-N)
 # eg run 4 subjects  -t 1-4
-#$ -t 1-190
+#$ -t 1-10
 
 # join stdout and stderr
 # this may make debugging easier, but output may become less
@@ -42,10 +42,12 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
 # run despiked ANTS data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
 # run non-despiked spm data
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
 # run non-despiked ANTS data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2
 
 
+## Connectome
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graphlbl/connectome_data/conn4graph .72 -d
 
 

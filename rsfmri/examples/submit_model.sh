@@ -6,7 +6,7 @@
 
 # specify number of jobs to run (1-N)
 # eg run 4 subjects  -t 1-4
-#$ -t 1-190
+#$ -t 1-10
 
 # join stdout and stderr
 # this may make debugging easier, but output may become less
@@ -41,7 +41,7 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -spm
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -spm -gsr
 # run despiked ANTS data
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d -gsr
 # run non-despiked spm data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
@@ -51,6 +51,9 @@ python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/ja
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graph/data/mri1.5/tr220 2.2 -gsr
 
 
+## connectome
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graphlbl/connectome_data/conn4graph 0.72 -d
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/model.py /home/jagust/graphlbl/connectome_data/conn4graph 0.72 -d -gsr
 
 
 
