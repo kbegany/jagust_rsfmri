@@ -21,10 +21,21 @@ def make_test_data(fill = 0):
     return nslices, tmpnii
 
 def test_get_files():
-    cwd = os.getcwd()
-    myinit = os.path.join(cwd, '__init__.py')
-    res, nfiles = utils.get_files(cwd, '*')
+    pth, _ = os.path.split(__file__)
+    myinit = os.path.join(pth, '__init__.py')
+    res, nfiles = utils.get_files(pth, '*')
     npt.assert_equal(myinit in res, True)
+
+
+def test_make_dir():
+    tmpdir = tempfile.mkdtemp()
+    dirnme = 'Created_directory'
+    newdir, exists = utils.make_dir(tmpdir, dirnme)
+    npt.assert_equal(newdir, os.path.join(tmpdir, dirnme))
+    npt.assert_equal(exists, False)
+    newdir, exists = utils.make_dir(tmpdir, dirnme)
+    npt.assert_equal(exists, True)
+
 
 def test_make_datestr():
     new_str = utils.make_datestr()
@@ -52,7 +63,7 @@ def test_get_slicetime_vars():
     npt.assert_equal(stdict['TR'], TR)
     npt.assert_equal(stdict['nslices'], nslices)
     ## cleanup
-    os.unlink(tmpnii) 
+    os.unlink(tmpnii)
 
 def test_save_json():
     nslices, tmpnii = make_test_data()
@@ -66,7 +77,7 @@ def test_save_json():
     # cleanup
     os.unlink(tmpnii)
     os.unlink(tmpfile)
-    
+
 def test_load_json():
     # make temp files
     nslices, tmpnii = make_test_data()
@@ -93,12 +104,16 @@ def test_realign_unwarp():
 def test_make_mean():
     _, one_file = make_test_data(fill = 1)
     _, two_file = make_test_data(fill = 2)
-    mean_file = utils.make_mean([one_file, two_file])
+    pth = os.path.dirname(one_file)
+    outfile = os.path.join(pth, 'meanfile.nii.gz')
+    mean_file = utils.make_mean([one_file, two_file], outfile)
+    npt.assert_equal(outfile, mean_file)
     dat = nibabel.load(mean_file).get_data()
     npt.assert_equal(dat.mean(), 1.5)
-    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii')
+    npt.assert_raises(IOError, utils.make_mean, 'stupidfile.nii',
+                      outfile)
     os.unlink(one_file)
-    os.unlink(two_file)   
+    os.unlink(two_file)
 
 def test_aparc_mask():
     # make label dat
@@ -136,10 +151,9 @@ def test_extract_seed_ts():
     seedimg.to_filename(tmpseed)
     # test mean
     meants = utils.extract_seed_ts(tmp4d, [tmpseed])
-    npt.assert_equal(isinstance(meants, dict), True)
-    keys = meants.keys()
-    npt.assert_almost_equal(meants[keys[0]][0], 0.49458008)
-    npt.assert_equal(meants[keys[0]].shape, (40,))
+    npt.assert_equal(isinstance(meants, list), True)
+    npt.assert_almost_equal(meants[0][0], 0.49458008)
+    npt.assert_equal(meants[0].shape, (40,))
     # test missing
     dat[0,0,:] = 0
     img = nibabel.Nifti1Image(dat, np.eye(4))

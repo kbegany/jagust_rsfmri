@@ -2,12 +2,19 @@ import os, math
 import tempfile
 
 import numpy as np
+
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
 import scipy.signal as ss
+import pandas
 
 import nibabel as ni
 
 _EPS = np.finfo(float).eps * 4.0
+
+
 
 def ants_to_matrix(infile):
     """ takes a transform defined by ANTS and turns it into a 
@@ -395,14 +402,16 @@ def movementarr_to_pandas(move_array, outfile_xls=None):
     dataframe object
     will write to outfile_xls if it is passed
     """
+    dimx, dimy = move_array.shape
     dims = ('x','y','z')
-    cols = ['trans_%s'%x for x in dims] + ['rot_%s'%x for x in dims] +\
-        ['displacement']
+    cols = ['trans_%s'%x for x in dims] + ['rot_%s'%x for x in dims] 
+    if dimy > 6:
+        # array includes displacement
+        cols += ['displacement'] 
     movedf = pandas.DataFrame(move_array, columns=cols)
     if not outfile_xls is None:
         movedf.to_excel(outfile_xls)
     return movedf
-
 
 
 def plot_movement(movement, outdir):
@@ -411,7 +420,7 @@ def plot_movement(movement, outdir):
     (see collate_affines)
     """
     if not movement.shape[1] == 7:
-        raise IOError('expected an nX7 matrix, found %s'%movement.shape)
+        raise IOError('expected an nX7 matrix, found {0}'.format(movement.shape))
     # create subplots
     for val, data in enumerate((movement[:,:3], 
         movement[:,3:6], 
