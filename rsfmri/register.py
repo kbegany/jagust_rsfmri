@@ -324,8 +324,10 @@ def apply_warp(moving, target, warp, affine, logger):
         logger.error('ERROR')
         return None
 
-def generate_jacobian(warpf, template, logger):
-    """ANTSJacobian 3 myWarp.nii fileprefix 1 template 1 """
+def generate_jacobian(warpf, template, logger, uselog = '1'):
+    """ANTSJacobian 3 myWarp.nii fileprefix 1 template 1 
+    by default generates log jacobian, set uselog to '0' to 
+    calulate just straing jacobian"""
     scriptdir = os.getcwd()
     tpth, tnme = os.path.split(template)
     if tpth == '':
@@ -339,7 +341,7 @@ def generate_jacobian(warpf, template, logger):
         _basecmd, dim,
         warpf,
         outprefix,
-        '1',
+        uselog,
         template,
         '1'
         ])
