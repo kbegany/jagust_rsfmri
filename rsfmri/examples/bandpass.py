@@ -71,7 +71,8 @@ def get_regressors(rlgndir):
     """open xml doc and return an array
     nregressors X ntimepoints"""
     xls = get_file(rlgndir, "B*movement.xls")
-    df = pandas.ExcelFile(xls).parse('sheet1')
+    ef = pandas.ExcelFile(xls)
+    df = ef.parse(ef.sheet_names[0])
     ## ANTS movement missing padded 0's
     if 'ants' in rlgndir:
         df = utils.zero_pad_movement(df)
