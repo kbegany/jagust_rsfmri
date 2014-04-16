@@ -6,7 +6,7 @@
 
 # specify number of jobs to run (1-N)
 # eg run 4 subjects  -t 1-4
-#$ -t 1-10
+#$ -t 1-20
 
 # join stdout and stderr
 # this may make debugging easier, but output may become less

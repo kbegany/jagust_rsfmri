@@ -360,10 +360,14 @@ def erode(infile):
     """ use skimage.morphology to quickly erode binary mask"""
     img = nibabel.load(infile)
     dat = img.get_data().squeeze()
-    kernel = np.zeros((3,3,3))
-    kernel[1,:,:] = 1
-    kernel[:,1,:] = 1
-    kernel[:,:,1] = 1
+    ## make kernel
+    tmp = np.diag([0,1,0])
+    mid = np.zeros((3,3))
+    mid[1,:] = 1
+    mid[:,1] = 1
+    kernel = np.hstack((tmp, mid, tmp))
+    kernel.shape = (3,3,3)
+    ## erode with kernel
     eroded = binary_erosion(dat, kernel)
     eroded = eroded.astype(int)
     newfile = filemanip.fname_presuffix(infile, 'e')
