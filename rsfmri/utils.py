@@ -394,6 +394,21 @@ def extract_seed_ts(data, seeds):
         meants.append(tmp.mean(0))
     return meants
 
+def mask4d_with3d(datf, maskf, labels):
+    """ given a 4D data file, and a mask file
+    for each label in labels, pull the mean ts
+    and save to an array that is nlabels X ntimepoints"""
+    dat = nibabel.load(datf).get_data()
+    mask = nibabel.load(maskf).get_data()
+    if not dat.shape[:3] == mask.shape:
+        raise ValueError('Shape of dat does not match mask')
+    result = np.empty((len(labels), dat.shape[-1]))
+    for val, label in enumerate(labels):
+        region = dat[mask == label, :]
+        result[val, :] = region.mean(axis=0)
+    return result
+
+
 
 def bandpass_data():
     """ filters for 4D images and timeseries in txt files
