@@ -1,5 +1,14 @@
+import os
+import sys
+from glob import glob
+import logging
+
+import numpy as np
+import pandas
+import argparse
+
 from rsfmri import utils
-from rsfmri import register
+from rsfmri import register as reg
 
 def find_make_workdir(subdir, despike, spm, gsr=False, logger=None):
     """ generates realign directory to query based on flags
@@ -41,10 +50,24 @@ def find_make_workdir(subdir, despike, spm, gsr=False, logger=None):
     if exists:
         if logger:
             logger.error('{0}: skipping {1}  exists'.format(subdir, adjmatdir))
-        raise IOError('{0}: EXISTS, Skipping'.format(modeldir))
+        raise IOError('{0}: EXISTS, Skipping'.format(adjmatdir))
     return rlgn_dir, workdir, bpdir, modeldir, adjmatdir
 
-
+def setup_logging(workdir, sid):
+    logger = logging.getLogger('fsl_model')
+    logger.setLevel(logging.DEBUG)
+    ts = reg.timestr()
+    fname = os.path.split(__file__)[-1].replace('.py', '')
+    logfile = os.path.join(workdir,
+                           '{0}_{1}_{2}.log'.format(sid, fname, ts))
+    fh = logging.FileHandler(logfile)
+    fh.setLevel(logging.DEBUG)
+    logger.addHandler(fh)
+    logger.info(__file__)
+    logger.info(ts)
+    logger.info(workdir)
+    logger.info(os.getenv('USER'))
+    return logger
 
 def make_ts_df(csv, data, maskf):
     """Using labels, values in the csv file
@@ -60,7 +83,7 @@ def make_ts_df(csv, data, maskf):
     df = pandas.read_csv(csv, header=None, sep=None)
     labels = df[1].values
     result = utils.mask4d_with3d(data, maskf, labels)
-    timeseries = pandas.DataFrame(result, index = df.[0])
+    timeseries = pandas.DataFrame(result, index = df[0])
     return timeseries
 
 def run_subject(subdir, gsr=False, despike=False, spm=False):
@@ -80,6 +103,8 @@ def run_subject(subdir, gsr=False, despike=False, spm=False):
     corr = timeseries.T.corr()
     outf = os.path.join(adjmatdir, 'adjmat.csv')
     corr.to_csv(outf)
+    npcorr = corr.values
+    np.save(outf.replace('.csv','.npy'), npcorr)
 
 
 if __name__ == '__main__':
