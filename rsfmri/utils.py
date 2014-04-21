@@ -427,6 +427,8 @@ def write_filtered(data, outfile):
     data.to_file(outfile)
 
 
+
+
 def bandpass_regressor():
     """ filters motion params and timeseries from csf and white matter
     (also global signal when relevant)
@@ -437,6 +439,7 @@ def zero_pad_movement(dataframe):
     #insert row of zeros into a dataframe
     rows, cols = dataframe.shape
     newdat = np.zeros((rows+1, cols))
+    newdat[1:,:] = dataframe
     return pandas.DataFrame(newdat, columns = dataframe.columns)
 
 

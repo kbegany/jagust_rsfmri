@@ -162,3 +162,12 @@ def test_extract_seed_ts():
     #os.unlink(tmpnii)
     os.unlink(tmpseed)
     os.unlink(tmp4d)
+
+def test_zero_pad_movement():
+    # create generic movement file
+    myrand = np.random.RandomState(42)
+    origdat = myrand.random_sample((10,7))
+    colnames = ['col{}'.format(x) for x in range(7)]
+    df = utils.pandas.DataFrame(origdat, columns = colnames)
+    paddat = utils.zero_pad_movement(df)
+    npt.assert_equal(df.values, paddat.values[1:,:])
