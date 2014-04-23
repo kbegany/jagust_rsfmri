@@ -443,6 +443,29 @@ def zero_pad_movement(dataframe):
     return pandas.DataFrame(newdat, columns = dataframe.columns)
 
 
+def smooth_to_fwhm(in4d, outfile = None, fwhm = '8'):
+    """ 3dBlurToFWHM -input res4d.nii.gz -FWHM 8
+    use 3dAFNItoNIFTI to convert"""
+    if outfile is None:
+        outfile = filemanip.fname_presuffix(in4d,
+            prefix = 'blur_{}'.format(fwhm))
+    cmd = '3dBlurToFWHM'
+    fullcmd = ' '.join([cmd,
+        '-prefix',
+        outfile,
+        '-input',
+        in4d,
+        '-FWHM',
+        '{}'.format(fwhm)] )
+
+    res = CommandLine(fullcmd).run()
+    if res.runtime.returncode == 0:
+        return fullcmd, outfile
+    print res.runtime.stderr
+    return None
+
+
+
 def fsl_bandpass(infile, outfile, tr, lowf=0.0083, highf=0.15):
     """ use fslmaths to bandpass filter a 4d file"""
     startdir = os.getcwd()
