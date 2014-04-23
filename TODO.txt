@@ -3,17 +3,11 @@ include log for coreg on subject basis
 spm and ants
 
 
-erosion is too aggressive, 
-
-change the kernel
-erode original before applying inverse transform
 
 implement warping to template space
-mask brainmask with aparc
-use transform rsfmri -> anat, and new warp params to write image
+ * mask brainmask with aparc
+ * use transform rsfmri -> anat, and new warp params to write image
 
 
-smooth
-uniform smooth using afni tool
 
 

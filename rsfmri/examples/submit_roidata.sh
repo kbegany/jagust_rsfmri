@@ -53,8 +53,8 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:/usr/local/anaconda/pk
 
 
 ## connectome
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graphlbl/connectome_data/conn4graph 0.72 -d
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graphlbl/connectome_data/conn4graph 0.72 -d -gsr
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graphlbl/connectome_data/conn4graph  -d
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graphlbl/connectome_data/conn4graph -d -gsr
 
 
 

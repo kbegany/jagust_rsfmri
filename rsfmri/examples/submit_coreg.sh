@@ -6,7 +6,7 @@
 
 # specify number of jobs to run (1-N)
 # eg run 4 subjects  -t 1-4
-#$ -t 1-20
+#$ -t 1-190
 # join stdout and stderr
 # this may make debugging easier, but output may become less
 # readable.
@@ -39,13 +39,13 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
 # run despiked spm data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -d -spm
 # run despiked ANTS data
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -d
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr189 -d
 # run non-despiked spm data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220 -spm
 # run non-despiked ANTS data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graph/data/mri1.5/tr220
 
 ## connectome_data
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graphlbl/connectome_data/conn4graph -d
+##python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/coreg_anat_regressors.py /home/jagust/graphlbl/connectome_data/conn4graph -d
 
 
