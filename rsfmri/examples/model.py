@@ -45,7 +45,7 @@ def find_make_workdir(subdir, despike, spm, gsr=False, logger=None):
 
     if exists:
         if logger:
-            logger.error('{0}: skipping {1}  existS'.format(subdir, bpdir))
+            logger.error('{0}: skipping {1}  existS'.format(subdir, modeldir))
         raise IOError('{0}: EXISTS, Skipping'.format(modeldir))
     return rlgn_dir, workdir, bpdir, modeldir
 

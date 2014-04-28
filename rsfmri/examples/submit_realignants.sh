@@ -37,4 +37,5 @@
 
 # Run python program
 export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/realign_ants.py /home/jagust/graph/data/mri1.5/tr220
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/realign_ants.py /home/jagust/graph/data/mri1.5/tr220
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/realign_ants.py /home/jagust/graph/data/mri1.5/tr189 -d

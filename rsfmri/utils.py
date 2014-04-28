@@ -360,10 +360,14 @@ def erode(infile):
     """ use skimage.morphology to quickly erode binary mask"""
     img = nibabel.load(infile)
     dat = img.get_data().squeeze()
-    kernel = np.zeros((3,3,3))
-    kernel[1,:,:] = 1
-    kernel[:,1,:] = 1
-    kernel[:,:,1] = 1
+    ## make kernel
+    tmp = np.diag([0,1,0])
+    mid = np.zeros((3,3))
+    mid[1,:] = 1
+    mid[:,1] = 1
+    kernel = np.hstack((tmp, mid, tmp))
+    kernel.shape = (3,3,3)
+    ## erode with kernel
     eroded = binary_erosion(dat, kernel)
     eroded = eroded.astype(int)
     newfile = filemanip.fname_presuffix(infile, 'e')
@@ -390,6 +394,21 @@ def extract_seed_ts(data, seeds):
         meants.append(tmp.mean(0))
     return meants
 
+def mask4d_with3d(datf, maskf, labels):
+    """ given a 4D data file, and a mask file
+    for each label in labels, pull the mean ts
+    and save to an array that is nlabels X ntimepoints"""
+    dat = nibabel.load(datf).get_data()
+    mask = nibabel.load(maskf).get_data()
+    if not dat.shape[:3] == mask.shape:
+        raise ValueError('Shape of dat does not match mask')
+    result = np.empty((len(labels), dat.shape[-1]))
+    for val, label in enumerate(labels):
+        region = dat[mask == label, :]
+        result[val, :] = region.mean(axis=0)
+    return result
+
+
 
 def bandpass_data():
     """ filters for 4D images and timeseries in txt files
@@ -408,6 +427,8 @@ def write_filtered(data, outfile):
     data.to_file(outfile)
 
 
+
+
 def bandpass_regressor():
     """ filters motion params and timeseries from csf and white matter
     (also global signal when relevant)
@@ -418,7 +439,31 @@ def zero_pad_movement(dataframe):
     #insert row of zeros into a dataframe
     rows, cols = dataframe.shape
     newdat = np.zeros((rows+1, cols))
+    newdat[1:,:] = dataframe
     return pandas.DataFrame(newdat, columns = dataframe.columns)
+
+
+def smooth_to_fwhm(in4d, outfile = None, fwhm = '8'):
+    """ 3dBlurToFWHM -input res4d.nii.gz -FWHM 8
+    use 3dAFNItoNIFTI to convert"""
+    if outfile is None:
+        outfile = filemanip.fname_presuffix(in4d,
+            prefix = 'blur_{}'.format(fwhm))
+    cmd = '3dBlurToFWHM'
+    fullcmd = ' '.join([cmd,
+        '-prefix',
+        outfile,
+        '-input',
+        in4d,
+        '-FWHM',
+        '{}'.format(fwhm)] )
+
+    res = CommandLine(fullcmd).run()
+    if res.runtime.returncode == 0:
+        return fullcmd, outfile
+    print res.runtime.stderr
+    return None
+
 
 
 def fsl_bandpass(infile, outfile, tr, lowf=0.0083, highf=0.15):

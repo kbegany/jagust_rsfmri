@@ -9,7 +9,8 @@ import pandas
 from rsfmri import utils
 from rsfmri import register as reg
 
-def find_make_workdir(subdir, despike, spm, logger=None):
+
+def find_make_workdir(subdir, despike, spm, gsr=False, logger=None):
     """ generates realign directory to query based on flags
     and if it exists and create new workdir
     """
@@ -33,14 +34,23 @@ def find_make_workdir(subdir, despike, spm, logger=None):
         raise IOError('{0}: MISSING, Skipping'.format(workdir))
     bpdirnme = utils.defaults['bandpass']
     bpdir, exists = utils.make_dir(workdir, bpdirnme)
-    if exists:
+    if not exists:
         if logger:
             logger.error('{0}: skipping {1}  existS'.format(subdir, bpdir))
-        raise IOError('{0}: EXISTS, Skipping'.format(bpdir))
-    return rlgn_dir, workdir, bpdir
+        raise IOError('{0}: Missing, Skipping'.format(bpdir))
+    modeldirnme = utils.defaults['model_fsl']
+    if gsr: # global signal regression
+        modeldirnme  = modeldirnme + '_gsr'
+    modeldir, exists = utils.make_dir(bpdir, modeldirnme)
+    resids_dir, exists = utils.make_dir(modeldir, 'resids')
+    if not exists:
+        if logger:
+            logger.error('{0}: skipping {1}  existS'.format(subdir, resids_dir))
+        raise IOError('{0}: Missing, Skipping'.format(resids_dir))
+    return resids_dir
 
 def setup_logging(workdir, sid):
-    logger = logging.getLogger('bandpass')
+    logger = logging.getLogger('fsl_model')
     logger.setLevel(logging.DEBUG)
     ts = reg.timestr()
     fname = os.path.split(__file__)[-1].replace('.py', '')
@@ -55,7 +65,6 @@ def setup_logging(workdir, sid):
     logger.info(os.getenv('USER'))
     return logger
 
-
 def get_file(workdir, type_glob, logger=None):
     files, nfiles = utils.get_files(workdir, type_glob)
     ## type_glob eg 'align4d_{0}.nii.gz'.format(sid) from utils.defaults)
@@ -67,73 +76,39 @@ def get_file(workdir, type_glob, logger=None):
     raise IOError('{0} in {1} not found'.format(type_glob, workdir))
 
 
-def get_regressors(rlgndir):
-    """open xml doc and return an array
-    nregressors X ntimepoints"""
-    xls = get_file(rlgndir, "B*movement.xls")
-    ef = pandas.ExcelFile(xls)
-    df = ef.parse(ef.sheet_names[0])
-    ## ANTS movement missing padded 0's
-    if 'ants' in rlgndir:
-        df = utils.zero_pad_movement(df)
-    # data is ntimepoints X nregressors
-    # transpose and drop 7th item
-    return df.values[:,:-1].T
-
-
-def process_subject(subdir, tr, despike=False, spm=False):
-
+def run_subject(subdir, gsr=False, despike=False, spm=False, fwhm=8):
     _, sid = os.path.split(subdir)
-    rawdir = os.path.join(subdir, 'raw')
-    rlgndir, coregdir, bpdir = find_make_workdir(subdir, despike, spm)
-    logger = setup_logging(bpdir, sid)
-    globtype = utils.defaults['aligned'].format(sid)
-    aligned = get_file(rlgndir, globtype, logger)
-    # regressors are a
-    regressors = get_regressors(rlgndir)
-    # bandpass data and movement regressors
-    bpaligned = utils.filemanip.fname_presuffix(aligned, prefix='bp',
-        newpath=bpdir)
-    logger.info(bpaligned)
-    outfile = utils.fsl_bandpass(aligned, bpaligned, tr)
-    if not outfile:
-        logger.error('{}: bandpass failed'.format(aligned))
-        raise IOError('{}: bandpass failed'.format(aligned))
-    bpregressors = utils.nitime_bandpass(regressors, tr)
-    movefiles = [os.path.join(bpdir, x) for x in utils.defaults['movement_names']]
-    for dat, outfile in zip(bpregressors, movefiles):
-        dat.tofile(outfile, sep='\n')
-        logger.info(outfile)
-    # extract WM, GM and global
-    wm = get_file(coregdir, 'eB*WM_mask.nii*', logger)
-    vent = get_file(coregdir,'B*VENT_mask.nii.gz', logger)
-    aparc = get_file(coregdir, 'invxfm_aparcaseg.nii*', logger)
 
-    noisefiles = [os.path.join(bpdir, x) for x in utils.defaults['noise_names']]
-    seedlist = utils.extract_seed_ts(bpaligned, (wm,vent,aparc))
-    for seed, outfile in zip(seedlist, noisefiles):
-        demeaned = seed - seed.mean()
-        demeaned.tofile(outfile, sep='\n')
-        logger.info(outfile)
+    resids_dir = find_make_workdir(subdir, despike, spm, gsr)
+    logger = setup_logging(resids_dir, sid)
+    logger.info(resids_dir)
+
+    resid = get_file(resids_dir, 'res4d*', logger)
+    cmd, smoothed = utils.smooth_to_fwhm(resid, outfile = None, fwhm = fwhm)
+    logger.info(cmd)
+
+
+
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
-        description='Bandpass 4D data, handle regressors')
+        description='Blur residuals in Native Space')
     parser.add_argument(
         'datadir',
         type=str,
         help='directory holding data')
-    parser.add_argument(
-        'tr',
-        type=float,
-        help='TR : data Repetition Time')
     parser.add_argument(
         '-g',
         '--globstr',
         type=str,
         default='B*',
         help='Optional glob string to get data (B*)')
+    parser.add_argument(
+        '-fwhm',
+        type=str,
+        default='8',
+        help='FWHM to smooth data to')
     parser.add_argument(
         '-d', '--despike',
         dest='despike',
@@ -145,6 +120,11 @@ if __name__ == '__main__':
         dest='spm',
         action='store_true',
         help='spm aligned data? (default False)')
+    parser.add_argument(
+        '-gsr', '--global-signal-regression',
+        dest='gsr',
+        action='store_true',
+        help='Put global signal regression into model (default False')
     try:
         args = parser.parse_args()
     except:
@@ -161,4 +141,6 @@ if __name__ == '__main__':
     fulldir = os.path.join(args.datadir, args.globstr)
     print fulldir
     allsub = sorted(glob(fulldir))
-    process_subject(allsub[taskid], args.tr, args.despike, args.spm)
+    run_subject(allsub[taskid], args.gsr, args.despike, args.spm, args.fwhm)
+
+

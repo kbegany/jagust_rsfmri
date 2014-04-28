@@ -1,0 +1,17 @@
+
+
+* trim final timeseries (first and last couple frames?)
+not an issue with roi, but voxelwise may be an issue at edge
+
+include log for coreg on subject basis
+spm and ants
+
+
+
+implement warping to template space
+ * mask brainmask with aparc
+ * use transform rsfmri -> anat, and new warp params to write image
+
+
+
+

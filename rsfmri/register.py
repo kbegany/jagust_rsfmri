@@ -239,7 +239,7 @@ def generate_warp(moving, target, logger):
     -o <outfile>.nii.gz -t SyN[0.25] -r Gauss[3,0]
     both images muct be indirectory"""
     scriptdir = os.getcwd()
-    tpth, tnme = os.path.split(target)
+    tpth, tnme, _ = split_filename(target)
     mpth, mnme = os.path.split(moving)
     if not tpth == mpth:
         raise IOError('target and moving need to be in same dir'\
@@ -285,7 +285,7 @@ def apply_warp(moving, target, warp, affine, logger):
     -R target <fname>Warp.nii.gz <fname>Affine.txt
     """
     scriptdir = os.getcwd()
-    tpth, tnme = os.path.split(target)
+    tpth, tnme, _ = split_filename(target)
     mpth, mnme = os.path.split(moving)
     _, warpf = os.path.split(warp)
     _, aff = os.path.split(affine)
@@ -302,7 +302,9 @@ def apply_warp(moving, target, warp, affine, logger):
     _basecmd = os.path.join(ANTSPATH,'WarpImageMultiTransform')
     dim = '3'
     #warpfiles = [warpf.replace('Warp', 'Warp'+x) for x in ('xvec', 'yvec','zvec')]
-    _, outfile = os.path.split(fname_presuffix(moving, 'warpd_'))
+    
+    _, outfile = os.path.split(fname_presuffix(moving, 
+        'warpd_2{}'.format(tnme)))
     fullcmd = ' '.join([
         _basecmd, dim,
         mnme, outfile,
@@ -322,8 +324,10 @@ def apply_warp(moving, target, warp, affine, logger):
         logger.error('ERROR')
         return None
 
-def generate_jacobian(warpf, template, logger):
-    """ANTSJacobian 3 myWarp.nii fileprefix 1 template 1 """
+def generate_jacobian(warpf, template, logger, uselog = '1'):
+    """ANTSJacobian 3 myWarp.nii fileprefix 1 template 1 
+    by default generates log jacobian, set uselog to '0' to 
+    calulate just straing jacobian"""
     scriptdir = os.getcwd()
     tpth, tnme = os.path.split(template)
     if tpth == '':
@@ -337,7 +341,7 @@ def generate_jacobian(warpf, template, logger):
         _basecmd, dim,
         warpf,
         outprefix,
-        '1',
+        uselog,
         template,
         '1'
         ])
