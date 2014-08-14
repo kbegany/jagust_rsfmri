@@ -234,6 +234,33 @@ def unzip_file(infile):
             return base
 
 
+def copy_files(infiles, newdir):
+    """wraps copy file to run across multiple files
+    returns list"""
+    newfiles = []
+    for f in infiles:
+        newf = copy_file(f, newdir)
+        newfiles.append(newf)
+    return newfiles
+
+
+def remove_files(files):
+    """removes files """
+    if not hasattr(files, '__iter__'):
+        cl = CommandLine('rm %s'% files)
+        out = cl.run()
+        if not out.runtime.returncode == 0:
+            print 'failed to delete %s' % files
+            print out.runtime.stderr
+        return
+    for f in files:
+        cl = CommandLine('rm %s'% f)
+        out = cl.run()
+        if not out.runtime.returncode == 0:
+            print 'failed to delete %s' % f
+            print out.runtime.stderr
+
+
 def afni_despike(in4d):
     """ uses afni despike to despike a 4D dataset
     saves as ds_<filename>"""

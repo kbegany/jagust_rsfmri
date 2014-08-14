@@ -18,7 +18,7 @@
 # this saves the output from your cluster jobs to your home directory
 # and names the files <scriptname>_<node=cn1-cn15>_<jobnumber>
 #    eg. python_wrapper.sh_cn12.7535
-#$ -o /home/jagust/cindeem/sge/LOGS/$JOB_NAME_$HOSTNAME.$JOB_ID
+#$ -o /home/jagust/graph/scripts/sge_scripts/logs/$JOB_NAME_$HOSTNAME.$JOB_ID
 
 # Shell to use: Specifies the interpreting shell for the job
 
@@ -43,7 +43,7 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:/usr/local/anaconda/pk
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graph/data/mri1.5/tr220  -d -spm -gsr
 # run despiked ANTS data
 /usr/local/anaconda/bin/python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graph/data/mri1.5/tr220  -d
-/usr/local/anaconda/bin/python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graph/data/mri1.5/tr220  -d -gsr
+#/usr/local/anaconda/bin/python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graph/data/mri1.5/tr220  -d -gsr
 # run non-despiked spm data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graph/data/mri1.5/tr220  -spm
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/roi_data.py /home/jagust/graph/data/mri1.5/tr220  -spm -gsr
