@@ -234,6 +234,22 @@ def unzip_file(infile):
             return base
 
 
+def copy_file(infile, newdir):
+    """ copy infile to new directory
+    return full path of new file
+    """
+    cl = CommandLine('cp %s %s'%(infile, newdir))
+    out = cl.run()
+    if not out.runtime.returncode == 0:
+        print 'failed to copy %s' % infile
+        print out.runtime.stderr
+        return None
+    else:
+        basenme = os.path.split(infile)[1]
+        newfile = os.path.join(newdir, basenme)
+        return newfile
+
+
 def copy_files(infiles, newdir):
     """wraps copy file to run across multiple files
     returns list"""

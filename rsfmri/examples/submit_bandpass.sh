@@ -42,9 +42,9 @@ export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
 # run despiked ANTS data
 #python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -d
 # run non-despiked spm data
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
+python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2 -spm
 # run non-despiked ANTS data
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/bandpass.py /home/jagust/graph/data/mri1.5/tr220 2.2
 
 
 ## Connectome
