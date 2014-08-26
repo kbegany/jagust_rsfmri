@@ -212,3 +212,350 @@ class RealignUnwarp(SPMCommand):
         return outputs
 
 
+class VBM8InputSpec(SPMCommandInputSpec):
+    in_files = traits.Either(traits.List(File(exists=True)),File(exists=True),
+                             field='estwrite.data',
+                             mandatory=True,
+                             desc='list of filename(s) for processing', copyfile=True)
+    tpm = File(exists=True, field='estwrite.opts.tpm',
+               desc='Tissue Probability Map, eg: TPM.nii')
+    ngaus = traits.List(traits.Int(), minlen=6, maxlen=6, field='opts.ngaus',
+                        desc='number of gaussians for each tissue class eg. [2,2,2,3,4,2]')
+    
+    write_gm = traits.List(traits.Int(), maxlen=4, minlen=4,
+                           field='estwrite.output.GM',
+                           desc='List of Grey matter write options, ' \
+                           '[Int, Int, Int, Int] for [native, warped, modulated, dartel]'\
+                           'native =1 or 0, warped = 1 or 0,'\
+                           'modulated = 0,1,or 2 [0=none, 1=affine+nonlinear, 2 = nonlinear],'\
+                           'dartel = 0,1 or 2 [0=none, 1=rigid, 2= affine]'\
+                           'eg [1, 1, 2,2] would create [native, warped,nonlinear,affine]\n'
+                           )
+    write_wm = traits.List(traits.Int(), maxlen=4, minlen=4,
+                           field='estwrite.output.WM',
+                           desc='List of White matter write options, ' \
+                           '[Int, Int, Int, Int] for [native, warped, modulated, dartel]'\
+                           'native =1 or 0, warped = 1 or 0,'\
+                           'modulated = 0,1,or 2 [0=none, 1=affine+nonlinear, 2 = nonlinear],'\
+                           'dartel = 0,1 or 2 [0=none, 1=rigid, 2= affine]'\
+                           'eg [True, True, 2,2] would create [native, warped,nonlinear,affine]\n'
+                           )
+    write_csf = traits.List(traits.Int(), maxlen=4, minlen=4,
+                            field='estwrite.output.CSF',
+                            desc='List of CSF  write options, ' \
+                            '[Int, Int, Int, Int] for [native, warped, modulated, dartel]'\
+                            'native =1 or 0, warped = 1 or 0,'\
+                            'modulated = 0,1,or 2 [0=none, 1=affine+nonlinear, 2 = nonlinear],'\
+                            'dartel = 0,1 or 2 [0=none, 1=rigid, 2= affine]'\
+                            'eg [True, True, 2,2] would create [native, warped,nonlinear,affine]\n'
+                            )
+    write_bias = traits.List(traits.Bool(), traits.Bool(), traits.Bool(),
+                             field='estwrite.output.bias',
+                             desc='list of Bools for which bias corrected images to write'\
+                             '[True/False, True/False, True/False],'\
+                             'specifying [native-space, normalized, affine]')
+    write_label = traits.List(traits.Bool(), traits.Bool(), traits.Bool(),
+                              field = 'estwrite.output.label',
+                              desc = 'list of Bools for which PVE label images to write'\
+                              '[True/False, True/False, True/False],'\
+                              'specifying [native-space, normalized, affine]')
+    write_warps = traits.List(traits.Bool(), traits.Bool(),
+                              field='estwrite.output.warps',
+                              desc='Specify which warps to write'\
+                              '[forward, inverse]')
+    
+class VBM8OutputSpec(TraitedSpec):                              
+    native_class_images = traits.List(traits.List(File(exists=True)),
+                                      desc='native space probability maps')
+    dartel_input_images = traits.List(traits.List(File(exists=True)),
+                                      desc='dartel imported class images')
+    normalized_class_images = traits.List(traits.List(File(exists=True)),
+                                          desc='normalized class images')
+    modulated_class_images = traits.List(traits.List(File(exists=True)),
+                                         desc='modulated+normalized class images')
+
+    bias_corrected_images = traits.List(traits.List(File(exists=True)),
+                                        desc='bias corrected images')
+    transformation_mat = OutputMultiPath(File(exists=True), desc='Normalization transformation')
+    deformation_field =  OutputMultiPath(File(exists=True), desc='Deformation field y_*')
+    inverse_deformation_field = OutputMultiPath(File(exists=True), desc='Inverse Deformation field y_*')
+
+class VBM8(SPMCommand):
+    """use spm to run VBM*"""
+
+    input_spec = VBM8InputSpec
+    output_spec = VBM8OutputSpec
+    _jobtype = 'tools'
+    _jobname = 'vbm8'
+
+    def _format_arg(self, opt, spec, val):
+        """Convert input to appropriate format for spm
+        """
+        if opt in ['in_files','tpm']:
+            return scans_for_fnames(val)
+
+        if opt in ['write_gm', 'write_wm','write_csf']:
+            new_tissue = {}
+            new_tissue.update({'native': int(val[0])})
+            new_tissue.update({'warped': int(val[1])})
+            new_tissue.update({'modulated': int(val[2])})
+            new_tissue.update({'dartel': int(val[3])})
+            return [new_tissue]
+        if opt == 'write_bias': 
+            new_tissue = {}
+            new_tissue.update({'native': int(val[0])})
+            new_tissue.update({'warped': int(val[1])})
+            new_tissue.update({'affine': int(val[2])})
+            return [new_tissue]
+        if opt == 'write_label':
+            new_tissue = {}
+            new_tissue.update({'native': int(val[0])})
+            new_tissue.update({'warped': int(val[1])})
+            new_tissue.update({'dartel': int(val[2])})
+            return [new_tissue]
+        if opt == 'write_warps':
+            return [int(val[0]), int(val[1])]
+        if opt == 'ngaus':
+            return [int(v) for v in val]
+                      
+                              
+
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs['native_class_images'] = []
+        outputs['dartel_input_images'] = []
+        outputs['normalized_class_images'] = []
+        outputs['modulated_class_images'] = []
+        outputs['transformation_mat'] = []
+        outputs['bias_corrected_images'] = []
+        outputs['transformation_mat'] = []
+        outputs['deformation_field'] = []
+        outputs['inverse_deformation_field'] = []
+        
+
+        n_classes = 3
+        for i in range(n_classes):
+            outputs['native_class_images'].append([])
+            outputs['dartel_input_images'].append([])
+            outputs['normalized_class_images'].append([])
+            outputs['modulated_class_images'].append([])
+            outputs['bias_corrected_images'].append([])
+
+        tissue_classes = [self.inputs.write_gm,self.inputs.write_wm,self.inputs.write_csf]
+        for filename in self.inputs.in_files:
+            pth, base, ext = split_filename(filename)
+            for i, tissue in enumerate(tissue_classes):
+                if isdefined(tissue):
+                    if tissue[0]:
+                        outputs['native_class_images'][i].append(os.path.join(pth,"p%d%s%s"%(i+1, base, ext)))
+                    if tissue[1]:
+                        outputs['dartel_input_images'][i].append(os.path.join(pth,"rp%d%s%s"%(i+1, base, ext)))
+                    if tissue[2]:
+                        outputs['normalized_class_images'][i].append(os.path.join(pth,"wrp%d%s%s"%(i+1,
+                                                                                                   base, ext)))
+                    if tissue[3]:
+                        outputs['modulated_class_images'][i].append(os.path.join(pth,"mwrp%d%s%s"%(i+1,
+                        base, ext)))
+            if isdefined(self.inputs.write_bias) and any(self.inputs.write_bias):
+                if self.write.bias[0]:
+                    outputs['bias_corrected_images'][0].append(os.path.join(pth, "m%s%s" % (base, ext)))
+                if self.write.bias[1]:
+                    outputs['bias_corrected_images'][1].append(os.path.join(pth, "mr%s%s" % (base, ext)))
+                if self.write.bias[2]:
+                    outputs['bias_corrected_images'][1].append(os.path.join(pth, "wmr%s%s" % (base, ext)))
+            outputs['transformation_mat'].append(os.path.join(pth, "%s_seg8.mat" % base))
+            if isdefined(self.inputs.write_warps) and self.inputs.write_warps[0]:
+                outputs['deformation_field'].append(os.path.join(pth, "y_r%s%s" % (base, ext)))
+            if isdefined(self.inputs.write_warps) and self.inputs.write_warps[1]:
+                outputs['inverse_deformation_field'].append(os.path.join(pth, "iy_r%s%s" % (base, ext)))    
+        #return outputs
+
+class DARTELInputSpec(SPMCommandInputSpec):
+    image_files = traits.List(traits.List(File(exists=True)),
+                              desc="A list of files to be segmented",
+                              field='warp.images', copyfile=False, mandatory=True)
+    template_prefix = traits.Str('Template', usedefault=True,
+                                 field='warp.settings.template',
+                                 desc='Prefix for template')
+    regularization_form = traits.Enum('Linear', 'Membrane', 'Bending',
+                                      field = 'warp.settings.rform',
+                                      desc='Form of regularization energy term')
+    iteration_parameters = traits.List(traits.Tuple(traits.Range(1,10), traits.Tuple(traits.Float, traits.Float, traits.Float),
+                                                    traits.Enum(1,2,4,8,16,32,64,128,256,512),
+                                                    traits.Enum(0,0.5,1,2,4,8,16,32)),
+                                       minlen=6,
+                                       maxlen=6,
+                                       field = 'warp.settings.param',
+                                       desc="""List of tuples for each iteration
+                                       - Inner iterations
+                                       - Regularization parameters
+                                       - Time points for deformation model
+                                       - smoothing parameter
+                                       """)
+    optimization_parameters = traits.Tuple(traits.Float, traits.Range(1,8), traits.Range(1,8),
+                                           field = 'warp.settings.optim',
+                                           desc="""Optimization settings a tuple
+                                           - LM regularization
+                                           - cycles of multigrid solver
+                                           - relaxation iterations
+                                           """)
+
+class DARTELOutputSpec(TraitedSpec):
+    final_template_file = File(exists=True, desc='final DARTEL template')
+    template_files = traits.List(File(exists=True), desc='Templates from different stages of iteration')
+    dartel_flow_fields = traits.List(File(exists=True), desc='DARTEL flow fields')
+
+class DARTEL(SPMCommand):
+    """Use spm DARTEL to create a template and flow fields
+
+    http://www.fil.ion.ucl.ac.uk/spm/doc/manual.pdf#page=197
+
+    Examples
+    --------
+    >>> import nipype.interfaces.spm as spm
+    >>> dartel = spm.DARTEL()
+    >>> dartel.inputs.image_files = [['rc1s1.nii','rc1s2.nii'],['rc2s1.nii', 'rc2s2.nii']]
+    >>> dartel.run() # doctest: +SKIP
+
+    """
+
+    input_spec = DARTELInputSpec
+    output_spec = DARTELOutputSpec
+    _jobtype = 'tools'
+    _jobname = 'dartel'
+
+    def _format_arg(self, opt, spec, val):
+        """Convert input to appropriate format for spm
+        """
+
+        if opt in ['image_files']:
+            return scans_for_fnames(val, keep4d=True, separate_sessions=True)
+        elif opt == 'regularization_form':
+            mapper = {'Linear':0, 'Membrane':1, 'Bending':2}
+            return mapper[val]
+        elif opt == 'iteration_parameters':
+            params = []
+            for param in val:
+                new_param = {}
+                new_param['its'] = param[0]
+                new_param['rparam'] = list(param[1])
+                new_param['K'] = param[2]
+                new_param['slam'] = param[3]
+                params.append(new_param)
+            return params
+        elif opt == 'optimization parameters':
+            new_param = {}
+            new_param['lmreg'] = val[0]
+            new_param['cyc'] = val[1]
+            new_param['its'] = val[2]
+            return [new_param]
+        else:
+            return val
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        outputs['template_files'] = []
+        for i in range(6):
+            outputs['template_files'].append(os.path.realpath('%s_%d.nii'%(self.inputs.template_prefix, i+1)))
+        outputs['final_template_file'] = os.path.realpath('%s_6.nii'%self.inputs.template_prefix)
+        outputs['dartel_flow_fields'] = []
+        for filename in self.inputs.image_files[0]:
+            pth, base, ext = split_filename(filename)
+            outputs['dartel_flow_fields'].append(os.path.realpath(os.path.join(pth,
+                                                                               'u_%s_%s%s'%(base,
+                                                                                            self.inputs.template_prefix,
+                                                                                            ext))))
+        return outputs
+
+
+class DARTELNorm2MNIInputSpec(SPMCommandInputSpec):
+    template_file = File(exists=True,
+                         desc="DARTEL template",
+                         field='mni_norm.template', copyfile=False, mandatory=True)
+    flowfield_files = InputMultiPath(File(exists=True),
+                                     desc="DARTEL flow fields u_rc1*",
+                                     field='mni_norm.data.subjs.flowfields',
+                                     mandatory=True)
+    apply_to_files = InputMultiPath(File(exists=True),
+                                     desc="Files to apply the transform to",
+                                     field='mni_norm.data.subjs.images',
+                                     mandatory=True, copyfile=False)
+    voxel_size = traits.Tuple(traits.Float, traits.Float, traits.Float,
+                              desc="Voxel sizes for output file",
+                              field='mni_norm.vox')
+    bounding_box = traits.Tuple(traits.Float, traits.Float, traits.Float,
+                                traits.Float, traits.Float, traits.Float,
+                                desc="Voxel sizes for output file",
+                                field='mni_norm.bb')
+    modulate = traits.Bool(field='mni_norm.preserve',
+                           desc="Modulate out images - no modulation preserves concentrations")
+    fwhm = traits.Either(traits.Tuple(traits.Float(), traits.Float, traits.Float),
+                         traits.Float(), field='mni_norm.fwhm',
+                         desc='3-list of fwhm for each dimension')
+
+class DARTELNorm2MNIOutputSpec(TraitedSpec):
+    normalized_files = OutputMultiPath(File(exists=True), desc='Normalized files in MNI space')
+    normalization_parameter_file = File(exists=True, desc='Transform parameters to MNI space')
+class DARTELNorm2MNI(SPMCommand):
+    """Use spm DARTEL to normalize data to MNI space
+
+    http://www.fil.ion.ucl.ac.uk/spm/doc/manual.pdf#page=200
+
+    Examples
+    --------
+    >>> import nipype.interfaces.spm as spm
+    >>> nm = spm.DARTELNorm2MNI()
+    >>> nm.inputs.template_file = 'Template_6.nii'
+    >>> nm.inputs.flowfield_files = ['u_rc1s1_Template.nii', 'u_rc1s3_Template.nii']
+    >>> nm.inputs.apply_to_files = ['c1s1.nii', 'c1s3.nii']
+    >>> nm.inputs.modulate = True
+    >>> nm.run() # doctest: +SKIP
+
+    """
+
+    input_spec = DARTELNorm2MNIInputSpec
+    output_spec = DARTELNorm2MNIOutputSpec
+    _jobtype = 'tools'
+    _jobname = 'dartel'
+
+    def _format_arg(self, opt, spec, val):
+        """Convert input to appropriate format for spm
+        """
+        if opt in ['template_file']:
+            return np.array([val], dtype=object)
+        elif opt in ['flowfield_files']:
+            return scans_for_fnames(val, keep4d=True)
+        elif opt in ['apply_to_files']:
+            return scans_for_fnames(val, keep4d=True, separate_sessions=True)
+        elif opt == 'voxel_size':
+            return list(val)
+        elif opt == 'bounding_box':
+            return list(val)
+        elif opt == 'fwhm':
+            if not isinstance(val, tuple):
+                return [val, val, val]
+            if isinstance(val, tuple):
+                return val
+        elif opt == 'modulate':
+            return int(val)
+        else:
+            return val
+
+    def _list_outputs(self):
+        outputs = self._outputs().get()
+        pth, base, ext = split_filename(self.inputs.template_file)
+        #outputs['normalization_parameter_file'] = os.path.realpath(base+'_2mni.mat')
+        outputs['normalized_files'] = []
+        prefix = "w"
+        if isdefined(self.inputs.modulate) and self.inputs.modulate:
+            prefix = 'm' + prefix
+        if isdefined(self.inputs.fwhm) and self.inputs.fwhm > 0:
+            prefix = 's' + prefix
+        for filename in self.inputs.apply_to_files:
+            pth, base, ext = split_filename(filename)
+            outputs['normalized_files'].append(os.path.realpath('%s%s%s'%(prefix,
+                                                                          base,
+                                                                          ext)))
+
+        return outputs

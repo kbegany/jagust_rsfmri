@@ -1,4 +1,4 @@
-import sys, re
+import sys, re, os
 
 import numpy as np
 import pandas as pd
@@ -6,9 +6,8 @@ from glob import glob
 
 from nipype.utils import filemanip
 from nipype.utils.filemanip import (fname_presuffix, copyfile, split_filename)
-import utils
 
-sys.path.insert(0, '/home/jagust/cindeem/CODE/manja')
+import utils
 import nipype_ext as npe
 
 
