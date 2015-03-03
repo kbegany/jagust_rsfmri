@@ -158,6 +158,6 @@ if __name__ == '__main__':
     logger.info(ts)
     logger.info(args)
     #datadir, tr, despike = args.datadir, args.TR, args.despike
-    process_all(datadir, globstr, tr, logger, despike)
+    process_all(datadir, 'B*', tr, logger, despike)
     #process_all(datadir, globstr, tr, logger, despike=False)
     #process_all(datadir, 'B13*', repetition_time, logger, despike)

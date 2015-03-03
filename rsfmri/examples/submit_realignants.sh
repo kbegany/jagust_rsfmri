@@ -6,7 +6,7 @@
 
 # specify number of jobs to run (1-N)
 # eg run 4 subjects  -t 1-4
-#$ -t 1-190
+#$ -t 1-2
 
 # join stdout and stderr
 # this may make debugging easier, but output may become less
@@ -18,7 +18,7 @@
 # this saves the output from your cluster jobs to your home directory
 # and names the files <scriptname>_<node=cn1-cn15>_<jobnumber>
 #    eg. python_wrapper.sh_cn12.7535
-#$ -o /home/jagust/cindeem/sge/LOGS/$JOB_NAME_$HOSTNAME.$JOB_ID
+#$ -o /home/jagust/graph/scripts/sge_scripts/logs/$JOB_NAME_$HOSTNAME.$JOB_ID
 
 # Shell to use: Specifies the interpreting shell for the job
 
@@ -37,5 +37,5 @@
 
 # Run python program
 export PYTHONPATH=/home/jagust/cindeem/CODE/jagust_rsfmri:$PYTHONPATH
-#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/realign_ants.py /home/jagust/graph/data/mri1.5/tr220
-python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/realign_ants.py /home/jagust/graph/data/mri1.5/tr189 -d
+#python /home/jagust/cindeem/CODE/jagust_rsfmri/rsfmri/examples/slicetime.py /home/jagust/graph/data/mri1.5/rest -d
+python /home/jagust/graph/scripts/jagust_rsfmri/rsfmri/examples/slicetime.py /home/jagust/graph/data/mri1.5/rest
